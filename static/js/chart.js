@@ -31,8 +31,19 @@ const LineChart = (function() {
                         }
                     },
                     zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'xy',
+                        },
+                        limits: {
+                            x: {min: 0, max: 15},
+                            y: {min: 0, max: 80},
+                        },
                         zoom: {
                             wheel: {
+                                enabled: true,
+                            },
+                            drag: {
                                 enabled: true,
                             },
                             pinch: {
