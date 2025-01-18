@@ -1,0 +1,84 @@
+.tab.active {
+    background-color: #007BFF;
+    color: white;
+}
+.actions {
+    text-align: center;
+}
+/* Table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+tr {
+    height: 50px; /* Fixed height to prevent resizing */
+}
+
+/* Dropdown container */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Dropdown button */
+.dropdown-toggle {
+    background-color: #007bff;
+    color: white;
+    padding: 5px 10px; /* Slimmer buttons */
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    margin: 0;
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.dropdown-menu button {
+    display: block;
+    width: 100%;
+    padding: 5px 10px; /* Slimmer menu buttons */
+    font-size: 14px;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #333; /* Darker for better visibility */
+}
+
+.dropdown-menu button:hover {
+    background-color: #f0f0f0;
+}
+
+/* Show dropdown menu on hover */
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+/* Prevent table from hiding overflow */
+td {
+    position: relative; /* Needed for the dropdown menu to escape bounds */
+}
+
+tr.htmx-swapping td {
+    opacity: 0;
+    transition: opacity 1s ease-out;
+  }

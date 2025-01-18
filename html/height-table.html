@@ -1,0 +1,27 @@
+{{ define "title" }}tahblay{{ end }}
+{{ define "content" }}
+
+<table id="heightTable" border="1">
+    <thead>
+        <tr id="headerRow">
+            <th>Age</th>
+            <th>Measurement Date</th>
+            <th>Height (inches)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ range . }}
+            <tr>
+                <td>{{ .Age | formatAge }}</td>
+                <td>{{ .Date | formatDate }}</td>
+                <td>{{ .Inches }}</td>
+            </tr>
+        {{ else }}
+            <tr>
+                <td colspan="3">No data found for this Person.</td>
+            </tr>
+        {{ end }}
+    </tbody>
+</table>
+
+{{ end }}

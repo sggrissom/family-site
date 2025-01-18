@@ -1,0 +1,56 @@
+{{ define "title"}}weight{{ end }}
+{{ define "content"}}
+    <h1>Weight Comparison by Age</h1>
+    <canvas id="weightChart" width="400" height="200"></canvas>
+
+    <!-- Form to Add/Remove People -->
+    <div>
+        <label>Person:
+            <select id="personId" name="personId">
+                {{ range .People }}
+                    <option value="{{ .Id }}">{{ .Name }}</option>
+                {{ end }}
+            </select>
+        </label>
+        <button onclick="addPerson()">Add</button>
+        <button onclick="removePerson()">Remove</button>
+    </div>
+  <a href="/weight/add" class="button">Add Data Point</a>
+{{ end }}
+
+{{ define "js" }}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/static/js/chart.js"></script>
+  <script>
+    LineChart.setApiEndpoint("/api/weight/")
+    LineChart.setDataFormatter((data) => data.map(d => ({
+                    x: parseFloat(d.Age),
+                    y: d.Pounds,
+                    date: d.Date,
+        })))
+    LineChart.setXTitle("Age (years)")
+    LineChart.setYTitle("Weight (lb)")
+    LineChart.setXTooltipCallback((tooltipItems) => `Age: ${tooltipItems[0].parsed.x.toFixed(1)} years`)
+    LineChart.setYTooltipCallback((tooltipItem) => {
+          const dataPoint = tooltipItem.raw;
+          const date = new Date(dataPoint.date);
+          const options = { year: 'numeric', month: 'long', day: 'numeric' };
+          return [
+              `Weight: ${dataPoint.y} lbs`,
+              `Recorded on: ${date.toLocaleDateString(undefined, options)}`
+          ];
+      })
+
+    LineChart.initializeChart("weightChart")
+
+    async function addPerson() {
+        const personId = document.getElementById('personId').value;
+        LineChart.addPerson(personId)
+    }
+
+    function removePerson() {
+        const personId = document.getElementById('personId').value.trim();
+        LineChart.removePerson(personId)
+      }
+  </script>
+{{ end }}

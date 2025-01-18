@@ -1,0 +1,81 @@
+{{ define "title" }}children{{ end }}
+{{ define "content" }} 
+    {{ range . }}
+        <div class="person-card" onclick="toggleDetails(this)">
+            <div class="person-summary">
+                <span>{{ .Name }}</span>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="person-details">
+                <p>b-day: {{ .Birthday }}</p>
+                <p>age: {{ .Age }}</p>
+                <p>latest height: {{ .Height }}</p>
+                <p><a href="/height/table/{{ .Id }}">height table</a></p>
+                <p>latest weight: {{ .Weight }}</p>
+                <!-- Add more details here as needed -->
+            </div>
+        </div>
+    {{ else }}
+        <p>No people found</p>
+    {{ end }}
+    <a href="/children/add" class="button">Add More</a>
+{{ end }}
+
+{{ define "childrenAdmin" }}
+    {{ range . }}
+        <p>ID: {{ .Id }}</p>
+        <p>Name: {{ .Name }}</p>
+        <hr>
+    {{ else }}
+        <p>no people found</p>
+    {{ end }}
+{{ end }}
+
+{{ define "css" }}
+<style>
+    .person-card {
+        border: 1px solid var(--text-light); /* Subtle border for dark/light modes */
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: var(--accent-bg); /* Adjust for dark/light modes */
+        color: var(--text); /* Ensure readable text */
+    }
+
+    .person-summary {
+        cursor: pointer;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--accent); /* Highlighted for visibility */
+    }
+
+    .person-details {
+        display: none; /* Hidden by default */
+        padding-top: 10px;
+    }
+
+    .toggle-icon {
+        font-size: 1.2em;
+        color: var(--text-light); /* Subtle color for the icon */
+        transition: transform 0.3s ease;
+    }
+
+    .person-card.expanded .toggle-icon {
+        transform: rotate(180deg); /* Rotated icon for expanded state */
+    }
+
+    .person-card.expanded .person-details {
+        display: block; /* Show details when expanded */
+        color: var(--text-light); /* Secondary text color for details */
+    }
+</style>
+{{ end }}
+{{ define "js" }}
+<script>
+    function toggleDetails(card) {
+        card.classList.toggle('expanded');
+    }
+</script>
+{{ end }}

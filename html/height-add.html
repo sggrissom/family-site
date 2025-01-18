@@ -1,0 +1,16 @@
+{{ define "title" }}add person height{{ end }}
+{{ define "content" }}
+    <form method="post" action="/height/add">
+        <label>Person:
+            <select name="personId" value="{{ .Height.PersonId }}">
+                {{ range .People }}
+                    <option value="{{ .Id }}">{{ .Name }}</option>
+                {{ end }}
+            </select>
+        </label>
+        <label>Measurement Date: <input type="date" name="measureDate" value="{{ .Height.Date}}"></label>
+        <label>Inches: <input type="number" step="0.01" name="inches" value="{{ .Height.Inches}}"></label>
+        <input type="hidden" name="id" value="{{ .Height.Id }}">
+        <button type="submit">Submit</button>
+    </form>
+{{ end }}

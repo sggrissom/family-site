@@ -1,0 +1,16 @@
+{{ define "title" }}add person weight{{ end }}
+{{ define "content" }}
+    <form method="post" action="/weight/add">
+        <label>Person:
+            <select name="personId" value="{{ .Weight.PersonId }}">
+                {{ range .People }}
+                    <option value="{{ .Id }}">{{ .Name }}</option>
+                {{ end }}
+            </select>
+        </label>
+        <label>Measurement Date: <input type="date" name="measureDate" value="{{ .Weight.Date}}"></label>
+        <label>Pounds: <input type="number" step="0.01" name="pounds" value="{{ .Weight.Pounds}}"></label>
+        <input type="hidden" name="id" value="{{ .Weight.Id }}">
+        <button type="submit">Submit</button>
+    </form>
+{{ end }}

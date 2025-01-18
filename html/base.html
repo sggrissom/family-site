@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/simple.min.css">
+    <script src="/static/js/ext/htmx.min.js"></script>
+    <title>{{ block "title" . }}Default Title{{ end }}</title>
+</head>
+<body>
+    <header>
+        <h1>Family Website</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/children">Children</a>
+            <a href="/height">Heights</a>
+            <a href="/weight">Weights</a>
+        </nav>
+    </header>
+    <main>
+        {{ block "content" . }}Default Content{{ end }}
+    </main>
+    <footer>
+        <p>&copy; 2024 Family Website</p>
+    </footer>
+    {{ block "css" . }}{{ end }}
+    {{ block "js" . }}{{ end }}
+</body>
+</html>

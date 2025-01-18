@@ -1,0 +1,167 @@
+{{ define "title"}}height{{ end }}
+{{ define "content"}}
+    <h1>Height Comparison by Age</h1>
+    <canvas id="heightChart" width="400" height="200"></canvas>
+
+    <div>
+        <label>Person:
+            <select id="personId" name="personId">
+                {{ range .People }}
+                    <option value="{{ .Id }}">{{ .Name }}</option>
+                {{ end }}
+            </select>
+        </label>
+        <button onclick="addPerson()">Add</button>
+        <button onclick="removePerson()">Remove</button>
+    </div>
+
+    <table id="comparisonTable" border="1">
+        <thead>
+            <tr id="headerRow">
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data rows dynamically added here -->
+        </tbody>
+    </table>
+    <a href="/height/add" class="button">Add Data Point</a>
+{{ end }}
+
+{{ define "js" }}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+  <script src="/static/js/ext/chartjs-plugin-zoom.min.js"></script>
+  <script src="/static/js/chart.js"></script>
+  <script>
+    LineChart.setApiEndpoint("/api/height/")
+    LineChart.setDataFormatter((data) => data.map(d => ({
+                    x: parseFloat(d.Age),
+                    y: d.Inches,
+                    date: d.Date,
+        })))
+    LineChart.setXTitle("Age (years)")
+    LineChart.setYTitle("Height (inches)")
+    LineChart.setXTooltipCallback((tooltipItems) => `Age: ${tooltipItems[0].parsed.x.toFixed(1)} years`)
+    LineChart.setYTooltipCallback((tooltipItem) => {
+        const dataPoint = tooltipItem.raw;
+        const date = new Date(dataPoint.date);
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return [
+            `Height: ${dataPoint.y}"`,
+            `Recorded on: ${date.toLocaleDateString(undefined, options)}`
+        ];
+      })
+
+    LineChart.initializeChart("heightChart")
+
+    const currentPeople = []
+
+    async function addPerson() {
+        const personId = document.getElementById('personId').value;
+        LineChart.addPerson(personId)
+        currentPeople.push(personId)
+        updateTable()
+    }
+
+    function removePerson() {
+        const personId = document.getElementById('personId').value.trim();
+        LineChart.removePerson(personId)
+        const index = currentPeople.indexOf(personId);
+        if (index > -1) {
+            currentPeople.splice(index, 1);
+        }
+        updateTable()
+    }
+
+    function getHeatmapClass(deviation, average) {
+        const intensity = Math.abs(deviation);
+        if (deviation > 0) {
+            if (intensity < 0.5) return 'heatmap-green-light';
+            if (intensity < 1) return 'heatmap-green-medium';
+            return 'heatmap-green-strong';
+        } else {
+            if (intensity < 0.5) return 'heatmap-red-light';
+            if (intensity < 1) return 'heatmap-red-medium';
+            return 'heatmap-red-strong';
+        }
+    }
+
+    async function updateTable() {
+        if (!currentPeople) return;
+
+        const query = currentPeople.map(id => `ids=${id}`).join('&');
+        const response = await fetch(`/api/height/table?${query}`);
+        const data = await response.json();
+
+        // Update the table
+        const headerRow = document.getElementById('headerRow');
+        const tbody = document.getElementById('comparisonTable').querySelector('tbody');
+        tbody.innerHTML = ''; // Clear existing rows
+
+        // Add headers
+        headerRow.innerHTML = '<th>Age (years)</th><th>Average (inches)</th>';
+        Object.entries(data.People).forEach(([index, person]) => {
+            const th = document.createElement('th');
+            th.textContent = person.Name;
+            headerRow.appendChild(th);
+        });
+
+        // Populate rows
+        data.Milestones.forEach((milestone) => {
+            const row = document.createElement('tr');
+            const ageCell = document.createElement('td');
+
+            if (milestone.MilestoneAge === 0) {
+                ageCell.textContent = "birth";
+            } else if (milestone.MilestoneAge < 1) {
+                ageCell.textContent = milestone.MilestoneAge * 12 + " months";
+            } else {
+                ageCell.textContent = milestone.MilestoneAge + " year";
+            }
+            row.appendChild(ageCell);
+
+            const averageCell = document.createElement('td');
+            averageCell.textContent = milestone.Average.toFixed(2)
+            row.appendChild(averageCell);
+
+            Object.entries(milestone.Inches).forEach(([index, milestoneInches]) => {
+                const heightCell = document.createElement('td');
+                heightCell.classList.add('heatmap');
+                if (parseFloat(milestoneInches) === 0) {
+                    heightCell.textContent = "-"
+                } else {
+                    const deviation = (parseFloat(milestoneInches) - milestone.Average).toFixed(2)
+                    heightCell.textContent = deviation > 0 ? `+${deviation}` : deviation
+                    heightCell.classList.add(getHeatmapClass(deviation, milestone.Average));
+                    heightCell.title = parseFloat(milestoneInches).toFixed(2) + '"'
+                }
+
+                row.appendChild(heightCell);
+            });
+
+            tbody.appendChild(row);
+        });
+    }
+  </script>
+{{ end }}
+
+{{ define "css" }}
+<style>
+    /* Base styles for table cells */
+    .heatmap {
+        text-align: center;
+        padding: 5px;
+        color: white; /* Ensure text contrasts with the background */
+    }
+
+    /* Shades for positive deviations (green) */
+    .heatmap-green-light { background-color: #a6dba0; }
+    .heatmap-green-medium { background-color: #5ab4ac; }
+    .heatmap-green-strong { background-color: #01665e; }
+
+    /* Shades for negative deviations (red) */
+    .heatmap-red-light { background-color: #f4a582; }
+    .heatmap-red-medium { background-color: #d6604d; }
+    .heatmap-red-strong { background-color: #67001f; }
+</style>
+{{ end }}
