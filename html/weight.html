@@ -15,12 +15,24 @@
         <button onclick="addPerson()">Add</button>
         <button onclick="removePerson()">Remove</button>
     </div>
+    <table id="comparisonTable" border="1">
+        <thead>
+            <tr id="headerRow">
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data rows dynamically added here -->
+        </tbody>
+    </table>
   <a href="/weight/add" class="button">Add Data Point</a>
 {{ end }}
 
 {{ define "js" }}
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="/static/js/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+  <script src="/static/js/ext/chartjs-plugin-zoom.min.js"></script>
+  <script src="/static/js/measurement-chart.js"></script>
+  <script src="/static/js/measurement-table.js"></script>
   <script>
     LineChart.setApiEndpoint("/api/weight/")
     LineChart.setDataFormatter((data) => data.map(d => ({
@@ -43,14 +55,26 @@
 
     LineChart.initializeChart("weightChart")
 
+    MeasurementTable.setApiEndpoint('/api/weight/table')
+    MeasurementTable.setTableId('comparisonTable')
+    MeasurementTable.setHeaderId('headerRow')
+
     async function addPerson() {
         const personId = document.getElementById('personId').value;
         LineChart.addPerson(personId)
+        MeasurementTable.addPerson(personId)
+        MeasurementTable.updateTable()
     }
 
     function removePerson() {
         const personId = document.getElementById('personId').value.trim();
         LineChart.removePerson(personId)
-      }
+        MeasurementTable.removePerson(personId)
+        MeasurementTable.updateTable()
+    }
   </script>
+{{ end }}
+
+{{ define "css" }}
+<link rel="stylesheet" href="/static/css/heatmap.css">
 {{ end }}

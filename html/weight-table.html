@@ -1,0 +1,27 @@
+{{ define "title" }}tahblay{{ end }}
+{{ define "content" }}
+
+<table id="weightTable" border="1">
+    <thead>
+        <tr id="headerRow">
+            <th>Age</th>
+            <th>Measurement Date</th>
+            <th>Weight (pounds)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{ range . }}
+            <tr>
+                <td>{{ .Age | formatAge }}</td>
+                <td>{{ .Date | formatDate }}</td>
+                <td>{{ .Pounds }}</td>
+            </tr>
+        {{ else }}
+            <tr>
+                <td colspan="3">No data found for this Person.</td>
+            </tr>
+        {{ end }}
+    </tbody>
+</table>
+
+{{ end }}

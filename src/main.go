@@ -40,6 +40,9 @@ func RenderTemplate(w http.ResponseWriter, templateName string, data interface{}
 			if months > 0 {
 				parts = append(parts, fmt.Sprintf("%d months", months))
 			}
+			if len(parts) == 0 {
+				return "< 1 month"
+			}
 			return strings.Join(parts, ", ")
 		},
 	}
@@ -77,8 +80,7 @@ func main() {
 
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	RegisterHeightPage(mux)
-	RegisterWeightPage(mux)
+	RegisterMeasurementsPages(mux)
 	RegisterChildrenPage(mux)
 
 	// HTTP to HTTPS redirect handler

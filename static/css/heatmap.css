@@ -1,0 +1,16 @@
+/* Base styles for table cells */
+.heatmap {
+    text-align: center;
+    padding: 5px;
+    color: white; /* Ensure text contrasts with the background */
+}
+
+/* Shades for positive deviations (green) */
+.heatmap-green-light { background-color: #a6dba0; }
+.heatmap-green-medium { background-color: #5ab4ac; }
+.heatmap-green-strong { background-color: #01665e; }
+
+/* Shades for negative deviations (red) */
+.heatmap-red-light { background-color: #f4a582; }
+.heatmap-red-medium { background-color: #d6604d; }
+.heatmap-red-strong { background-color: #67001f; }
