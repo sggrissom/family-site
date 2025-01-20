@@ -76,12 +76,18 @@ func main() {
 	vbolt.InitBuckets(db, &Info)
 	defer db.Close()
 
-	mux := http.NewServeMux()
+	mux := &Mux{
+		family: http.NewServeMux(),
+		maia:   http.NewServeMux(),
+	}
 
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	mux.family.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	mux.family.Handle("/maia/", http.StripPrefix("/maia/", http.FileServer(http.Dir("../maia/html"))))
+	mux.maia.Handle("/", http.FileServer(http.Dir("../maia/html")))
 
-	RegisterMeasurementsPages(mux)
-	RegisterChildrenPage(mux)
+	RegisterMeasurementsPages(mux.family)
+	RegisterChildrenPage(mux.family)
+	RegisterPostPages(mux.family)
 
 	// HTTP to HTTPS redirect handler
 	go func() {
@@ -93,7 +99,7 @@ func main() {
 	}()
 
 	// HTTPS server
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.family.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		RenderTemplate(w, "home", nil)
 	})
 
@@ -110,5 +116,18 @@ func main() {
 	} else {
 		log.Println("TLS disabled. Running HTTP only")
 		log.Fatal(http.ListenAndServe(addr, mux))
+	}
+}
+
+type Mux struct {
+	family, maia *http.ServeMux
+}
+
+func (mux *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	domainParts := strings.Split(r.Host, ".")
+	if domainParts[0] == "maia" {
+		mux.maia.ServeHTTP(w, r)
+	} else {
+		mux.family.ServeHTTP(w, r)
 	}
 }
