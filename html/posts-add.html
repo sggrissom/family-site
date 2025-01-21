@@ -1,0 +1,53 @@
+{{ define "title" }}add post{{ end }}
+{{ define "content" }}
+    <form method="post" action="/posts/add" id="add-post-form">
+        <label>Person:
+            <select name="personId">
+                {{ range .People }}
+                    <option value="{{ .Id }}">{{ .Name }}</option>
+                {{ end }}
+            </select>
+        </label>
+        <label>Entry Date: <input type="date" name="entryDate" value="{{ .Post.EntryDate }}"></label>
+        <input type="hidden" name="quill-content" id="quill-content" value="{{ .Post.Content }}">
+        <div id="editor-container" class="editor"></div>
+        <input type="hidden" name="id" value="{{ .Post.Id }}">
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+{{ end }}
+
+{{ define "css" }}
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
+<style>
+    .editor {
+        height: 200px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        background: #fff;
+    }
+</style>
+{{ end }}
+
+{{ define "js" }}
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Quill
+        var quill = new Quill('#editor-container', {
+            theme: 'snow', // Choose the "snow" or "bubble" theme
+        });
+
+        quill.root.innerHTML = document.getElementById('quill-content').value
+
+        // Capture form submission
+        document.getElementById('add-post-form').addEventListener('submit', function (event) {
+            // Update the hidden input with the Quill editor content
+            var quillContent = document.getElementById('quill-content');
+            quillContent.value = quill.root.innerHTML;
+        });
+    });
+</script>
+
+{{ end }}

@@ -45,6 +45,9 @@ func RenderTemplate(w http.ResponseWriter, templateName string, data interface{}
 			}
 			return strings.Join(parts, ", ")
 		},
+		"displayHtml": func(content string) template.HTML {
+			return template.HTML(content)
+		},
 	}
 
 	tmpl := template.Must(template.New("base.html").Funcs(funcMap).ParseFiles(
