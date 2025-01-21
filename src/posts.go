@@ -54,7 +54,12 @@ func RegisterPostPages(mux *http.ServeMux) {
 	})
 	mux.HandleFunc("GET /posts/add", func(w http.ResponseWriter, r *http.Request) {
 		vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-			RenderTemplate(w, "posts-add", getAllPeople(tx))
+			RenderTemplate(w, "posts-add", struct {
+				People []Person
+				Post   Post
+			}{
+				People: getAllPeople(tx),
+			})
 		})
 	})
 	mux.HandleFunc("GET /posts/edit/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -69,6 +74,16 @@ func RegisterPostPages(mux *http.ServeMux) {
 				Post:   getPost(tx, idVal),
 			})
 		})
+	})
+	mux.HandleFunc("GET /posts/delete/{id}", func(w http.ResponseWriter, r *http.Request) {
+		vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
+			id := r.PathValue("id")
+			idVal, _ := strconv.Atoi(id)
+			vbolt.Delete(tx, PostBucket, idVal)
+			vbolt.TxCommit(tx)
+		})
+
+		http.Redirect(w, r, "/posts", http.StatusFound)
 	})
 	mux.HandleFunc("POST /posts/add", func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()

@@ -20,7 +20,16 @@ var Info vbolt.Info // define once
 func RenderTemplate(w http.ResponseWriter, templateName string, data interface{}) {
 	funcMap := template.FuncMap{
 		"formatDate": func(t time.Time) string {
+			if t.Year() == 1 {
+				return ""
+			}
 			return t.Format("Jan 2, 2006")
+		},
+		"formatDateForInput": func(t time.Time) string {
+			if t.Year() == 1 {
+				return ""
+			}
+			return t.Format("2006-01-02")
 		},
 		"formatNumber": func(n float64) string {
 			return fmt.Sprintf("%.2f", n)
