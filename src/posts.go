@@ -1,7 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -111,4 +116,45 @@ func RegisterPostPages(mux *http.ServeMux) {
 
 		http.Redirect(w, r, "/posts", http.StatusFound)
 	})
+	mux.HandleFunc("POST /post/upload-image", func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 10<<23)
+
+		if err := r.ParseMultipartForm(10 << 23); err != nil {
+			http.Error(w, "File too large", http.StatusBadRequest)
+			return
+		}
+
+		file, handler, err := r.FormFile("image")
+		if err != nil {
+			http.Error(w, "Error retrieving file", http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+
+		filename := fmt.Sprintf("%d-%s", time.Now().Unix(), handler.Filename)
+		savePath := filepath.Join("uploads", filename)
+
+		if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
+			http.Error(w, "Error creating directory", http.StatusInternalServerError)
+			return
+		}
+
+		dst, err := os.Create(savePath)
+		if err != nil {
+			http.Error(w, "Error saving file", http.StatusInternalServerError)
+			return
+		}
+		defer dst.Close()
+		if _, err := io.Copy(dst, file); err != nil {
+			http.Error(w, "Error saving file", http.StatusInternalServerError)
+			return
+		}
+
+		fileURL := fmt.Sprintf("/uploads/%s", filename)
+		response := map[string]string{"url": fileURL}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	})
+
+	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 }
