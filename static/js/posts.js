@@ -1,6 +1,6 @@
-const ImageHandler = (function() {
+const ImageHandler = (function () {
     let quill;
-    
+
     let isResizing = false
     let imgElement = null
     let imgWidth = 0
@@ -40,6 +40,7 @@ const ImageHandler = (function() {
             if (!img.classList.contains('resizeable')) {
                 img.classList.add('resizable')
                 img.addEventListener('mousedown', startResizing)
+                img.addEventListener('touchstart', startResizing, { passive: false })
             }
         })
     }
@@ -49,20 +50,34 @@ const ImageHandler = (function() {
         imgElement = e.target
         imgWidth = imgElement.offsetWidth
         imgHeight = imgElement.offsetHeight
-        startX = e.clientX
-        startY = e.clientY
+        if (e.type === 'mousedown') {
+            startX = e.clientX;
+            startY = e.clientY;
+        } else if (e.type === 'touchstart') {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }
 
         e.preventDefault()
 
         window.addEventListener('mousemove', resizeImage)
         window.addEventListener('mouseup', stopResizing)
+        window.addEventListener('touchmove', resizeImage, { passive: false })
+        window.addEventListener('touchend', stopResizing)
     }
 
     const resizeImage = (e) => {
         if (!isResizing) return
 
-        const dx = e.clientX - startX
-        const dy = e.clientY - startY
+        if (e.type === 'mousemove') {
+            currentX = e.clientX;
+            currentY = e.clientY;
+        } else if (e.type === 'touchmove') {
+            currentX = e.touches[0].clientX;
+            currentY = e.touches[0].clientY;
+        }
+        const dx = currentX - startX
+        const dy = currentY - startY
 
         const newWidth = imgWidth + dx
         const newHeight = imgHeight + dy
@@ -79,6 +94,8 @@ const ImageHandler = (function() {
         isResizing = false
         window.removeEventListener('mousemove', resizeImage)
         window.removeEventListener('mouseup', stopResizing)
+        window.removeEventListener('touchmove', resizeImage);
+        window.removeEventListener('touchend', stopResizing);
     }
 
     return {
