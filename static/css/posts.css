@@ -1,0 +1,95 @@
+.editor {
+    height: 200px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    background: #fff;
+}
+
+#delete-button {
+    background-color: var(--code);
+}
+
+#editor-container img {
+    position: relative;
+    max-width: 100%;
+    cursor: move;
+}
+
+#editor-container img.resizable:after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 15px;
+    height: 15px;
+    background-size: 12px;
+    pointer-events: none;
+}
+
+#editor-container img.resizable {
+    cursor: se-resize;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.post-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.post-card h2 {
+    margin: 0 0 10px;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.post-card p {
+    color: #555;
+    line-height: 1.6;
+}
+
+.post-card > p {
+    margin: 0;
+}
+
+.post-card .post-meta {
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .post-card .edit-button {
+    background: none;
+    border: none;
+    color: #007BFF;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.post-card .edit-button:hover {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+@media (max-width: 600px) {
+    .post-card {
+        padding: 15px;
+    }
+
+    .post-card h2 {
+        font-size: 1.25rem;
+    }
+}
