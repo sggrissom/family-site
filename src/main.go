@@ -100,6 +100,7 @@ func main() {
 	RegisterMeasurementsPages(mux.family)
 	RegisterChildrenPage(mux.family)
 	RegisterPostPages(mux.family)
+	RegisterLoginPages(mux.family)
 
 	// HTTP to HTTPS redirect handler
 	go func() {
