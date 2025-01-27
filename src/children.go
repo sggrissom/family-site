@@ -122,7 +122,7 @@ func RegisterChildrenPage(mux *http.ServeMux) {
 			RenderTemplate(w, "children-add", getPerson(tx, idVal))
 		})
 	})
-	mux.HandleFunc("GET /children/delete/{id}", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("GET /children/delete/{id}", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
 			id := r.PathValue("id")
 			idVal, _ := strconv.Atoi(id)
@@ -131,8 +131,8 @@ func RegisterChildrenPage(mux *http.ServeMux) {
 		})
 
 		http.Redirect(w, r, "/children", http.StatusFound)
-	})
-	mux.HandleFunc("POST /children/add", func(w http.ResponseWriter, r *http.Request) {
+	})))
+	mux.Handle("POST /children/add", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		birthdate := r.FormValue("birthdate")
 		name := r.FormValue("name")
@@ -154,5 +154,5 @@ func RegisterChildrenPage(mux *http.ServeMux) {
 		})
 
 		http.Redirect(w, r, "/children", http.StatusFound)
-	})
+	})))
 }

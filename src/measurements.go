@@ -217,7 +217,7 @@ func RegisterMeasurementsPages(mux *http.ServeMux) {
 			})
 		})
 	})
-	mux.HandleFunc("POST /height/add", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("POST /height/add", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		measureDate := r.FormValue("measureDate")
 		inches, _ := strconv.ParseFloat(r.FormValue("inches"), 64)
@@ -242,7 +242,7 @@ func RegisterMeasurementsPages(mux *http.ServeMux) {
 		})
 
 		http.Redirect(w, r, "/height", http.StatusFound)
-	})
+	})))
 	mux.HandleFunc("GET /weight/{personId}", func(w http.ResponseWriter, r *http.Request) {
 		personId, _ := strconv.Atoi(r.PathValue("personId"))
 		RenderTemplate(w, "weight", QueryWeights(personId))
@@ -257,7 +257,7 @@ func RegisterMeasurementsPages(mux *http.ServeMux) {
 			})
 		})
 	})
-	mux.HandleFunc("POST /weight/add", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("POST /weight/add", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		measureDate := r.FormValue("measureDate")
 		pounds, _ := strconv.ParseFloat(r.FormValue("pounds"), 64)
@@ -282,7 +282,7 @@ func RegisterMeasurementsPages(mux *http.ServeMux) {
 		})
 
 		http.Redirect(w, r, "/weight", http.StatusFound)
-	})
+	})))
 	mux.HandleFunc("GET /api/height/{id}", func(w http.ResponseWriter, r *http.Request) {
 		personId, _ := strconv.Atoi(r.PathValue("id"))
 		w.Header().Set("Content-Type", "application/json")

@@ -80,6 +80,17 @@ func RenderTemplateBlock(w http.ResponseWriter, templateName string, blockName s
 	}
 }
 
+func AuthHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//todo: implement auth
+		if true {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	fmt.Println("family site starting")
 

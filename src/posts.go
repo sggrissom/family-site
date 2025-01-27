@@ -80,7 +80,8 @@ func RegisterPostPages(mux *http.ServeMux) {
 			})
 		})
 	})
-	mux.HandleFunc("GET /posts/delete/{id}", func(w http.ResponseWriter, r *http.Request) {
+
+	mux.Handle("GET /posts/delete/{id}", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
 			id := r.PathValue("id")
 			idVal, _ := strconv.Atoi(id)
@@ -89,8 +90,8 @@ func RegisterPostPages(mux *http.ServeMux) {
 		})
 
 		http.Redirect(w, r, "/posts", http.StatusFound)
-	})
-	mux.HandleFunc("POST /posts/add", func(w http.ResponseWriter, r *http.Request) {
+	})))
+	mux.Handle("POST /posts/add", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		entryDate := r.FormValue("entryDate")
 		personId, _ := strconv.Atoi(r.FormValue("personId"))
@@ -115,8 +116,8 @@ func RegisterPostPages(mux *http.ServeMux) {
 		})
 
 		http.Redirect(w, r, "/posts", http.StatusFound)
-	})
-	mux.HandleFunc("POST /post/upload-image", func(w http.ResponseWriter, r *http.Request) {
+	})))
+	mux.Handle("POST /post/upload-image", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, 10<<23)
 
 		if err := r.ParseMultipartForm(10 << 23); err != nil {
@@ -154,7 +155,7 @@ func RegisterPostPages(mux *http.ServeMux) {
 		response := map[string]string{"url": fileURL}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
-	})
+	})))
 
 	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 }
