@@ -52,110 +52,117 @@ func getPost(tx *vbolt.Tx, id int) (post Post) {
 }
 
 func RegisterPostPages(mux *http.ServeMux) {
-	mux.HandleFunc("GET /posts", func(w http.ResponseWriter, r *http.Request) {
-		vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-			RenderTemplate(w, "posts", getAllPosts(tx))
-		})
-	})
-	mux.HandleFunc("GET /posts/add", func(w http.ResponseWriter, r *http.Request) {
-		vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-			RenderTemplate(w, "posts-add", struct {
-				People []Person
-				Post   Post
-			}{
-				People: getAllPeople(tx),
-			})
-		})
-	})
-	mux.HandleFunc("GET /posts/edit/{id}", func(w http.ResponseWriter, r *http.Request) {
-		vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-			id := r.PathValue("id")
-			idVal, _ := strconv.Atoi(id)
-			RenderTemplate(w, "posts-add", struct {
-				People []Person
-				Post   Post
-			}{
-				People: getAllPeople(tx),
-				Post:   getPost(tx, idVal),
-			})
-		})
-	})
-
-	mux.Handle("GET /posts/delete/{id}", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
-			id := r.PathValue("id")
-			idVal, _ := strconv.Atoi(id)
-			vbolt.Delete(tx, PostBucket, idVal)
-			vbolt.TxCommit(tx)
-		})
-
-		http.Redirect(w, r, "/posts", http.StatusFound)
-	})))
-	mux.Handle("POST /posts/add", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm()
-		entryDate := r.FormValue("entryDate")
-		personId, _ := strconv.Atoi(r.FormValue("personId"))
-		content := r.FormValue("quill-content")
-		id, _ := strconv.Atoi(r.FormValue("id"))
-
-		entryDateTime, _ := time.Parse("2006-01-02", entryDate)
-
-		entry := Post{
-			Id:        id,
-			PersonId:  personId,
-			EntryDate: entryDateTime,
-			Content:   content,
-		}
-
-		vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
-			if entry.Id == 0 {
-				entry.Id = vbolt.NextIntId(tx, PostBucket)
-			}
-			vbolt.Write(tx, PostBucket, entry.Id, &entry)
-			vbolt.TxCommit(tx)
-		})
-
-		http.Redirect(w, r, "/posts", http.StatusFound)
-	})))
-	mux.Handle("POST /post/upload-image", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Body = http.MaxBytesReader(w, r.Body, 10<<23)
-
-		if err := r.ParseMultipartForm(10 << 23); err != nil {
-			http.Error(w, "File too large", http.StatusBadRequest)
-			return
-		}
-
-		file, handler, err := r.FormFile("image")
-		if err != nil {
-			http.Error(w, "Error retrieving file", http.StatusInternalServerError)
-			return
-		}
-		defer file.Close()
-
-		filename := fmt.Sprintf("%d-%s", time.Now().Unix(), handler.Filename)
-		savePath := filepath.Join("uploads", filename)
-
-		if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
-			http.Error(w, "Error creating directory", http.StatusInternalServerError)
-			return
-		}
-
-		dst, err := os.Create(savePath)
-		if err != nil {
-			http.Error(w, "Error saving file", http.StatusInternalServerError)
-			return
-		}
-		defer dst.Close()
-		if _, err := io.Copy(dst, file); err != nil {
-			http.Error(w, "Error saving file", http.StatusInternalServerError)
-			return
-		}
-
-		fileURL := fmt.Sprintf("/uploads/%s", filename)
-		response := map[string]string{"url": fileURL}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
-	})))
+	mux.HandleFunc("GET /posts", postsPage)
+	mux.HandleFunc("GET /posts/add", addPostPage)
+	mux.HandleFunc("GET /posts/edit/{id}", editPostPage)
+	mux.Handle("GET /posts/delete/{id}", AuthHandler(http.HandlerFunc(deletePost)))
+	mux.Handle("POST /posts/add", AuthHandler(http.HandlerFunc(savePost)))
+	mux.Handle("POST /post/upload-image", AuthHandler(http.HandlerFunc(uploadImage)))
 
 	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
+}
+
+func postsPage(w http.ResponseWriter, r *http.Request) {
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		RenderTemplate(w, "posts", getAllPosts(tx))
+	})
+}
+func addPostPage(w http.ResponseWriter, r *http.Request) {
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		RenderTemplate(w, "posts-add", struct {
+			People []Person
+			Post   Post
+		}{
+			People: getAllPeople(tx),
+		})
+	})
+}
+func editPostPage(w http.ResponseWriter, r *http.Request) {
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		id := r.PathValue("id")
+		idVal, _ := strconv.Atoi(id)
+		RenderTemplate(w, "posts-add", struct {
+			People []Person
+			Post   Post
+		}{
+			People: getAllPeople(tx),
+			Post:   getPost(tx, idVal),
+		})
+	})
+}
+
+func deletePost(w http.ResponseWriter, r *http.Request) {
+	vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
+		id := r.PathValue("id")
+		idVal, _ := strconv.Atoi(id)
+		vbolt.Delete(tx, PostBucket, idVal)
+		vbolt.TxCommit(tx)
+	})
+
+	http.Redirect(w, r, "/posts", http.StatusFound)
+}
+func savePost(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	entryDate := r.FormValue("entryDate")
+	personId, _ := strconv.Atoi(r.FormValue("personId"))
+	content := r.FormValue("quill-content")
+	id, _ := strconv.Atoi(r.FormValue("id"))
+
+	entryDateTime, _ := time.Parse("2006-01-02", entryDate)
+
+	entry := Post{
+		Id:        id,
+		PersonId:  personId,
+		EntryDate: entryDateTime,
+		Content:   content,
+	}
+
+	vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
+		if entry.Id == 0 {
+			entry.Id = vbolt.NextIntId(tx, PostBucket)
+		}
+		vbolt.Write(tx, PostBucket, entry.Id, &entry)
+		vbolt.TxCommit(tx)
+	})
+
+	http.Redirect(w, r, "/posts", http.StatusFound)
+}
+func uploadImage(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<23)
+
+	if err := r.ParseMultipartForm(10 << 23); err != nil {
+		http.Error(w, "File too large", http.StatusBadRequest)
+		return
+	}
+
+	file, handler, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "Error retrieving file", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	filename := fmt.Sprintf("%d-%s", time.Now().Unix(), handler.Filename)
+	savePath := filepath.Join("uploads", filename)
+
+	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
+		http.Error(w, "Error creating directory", http.StatusInternalServerError)
+		return
+	}
+
+	dst, err := os.Create(savePath)
+	if err != nil {
+		http.Error(w, "Error saving file", http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+	if _, err := io.Copy(dst, file); err != nil {
+		http.Error(w, "Error saving file", http.StatusInternalServerError)
+		return
+	}
+
+	fileURL := fmt.Sprintf("/uploads/%s", filename)
+	response := map[string]string{"url": fileURL}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

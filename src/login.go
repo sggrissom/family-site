@@ -5,7 +5,9 @@ import (
 )
 
 func RegisterLoginPages(mux *http.ServeMux) {
-	mux.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) {
-		RenderTemplate(w, "login", nil)
-	})
+	mux.HandleFunc("GET /login", loginPage)
+}
+
+func loginPage(w http.ResponseWriter, r *http.Request) {
+	RenderTemplate(w, "login", nil)
 }

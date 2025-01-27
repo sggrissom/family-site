@@ -102,57 +102,64 @@ func CalculateAge(birthday time.Time, includeMonths bool) string {
 }
 
 func RegisterChildrenPage(mux *http.ServeMux) {
-	mux.HandleFunc("/children", func(w http.ResponseWriter, r *http.Request) {
-		vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-			RenderTemplate(w, "children", getAllPeople(tx))
-		})
-	})
-	mux.HandleFunc("/children/admin", func(w http.ResponseWriter, r *http.Request) {
-		vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-			RenderTemplateBlock(w, "children", "childrenAdmin", getAllPeople(tx))
-		})
-	})
-	mux.HandleFunc("GET /children/add", func(w http.ResponseWriter, r *http.Request) {
-		RenderTemplate(w, "children-add", nil)
-	})
-	mux.HandleFunc("GET /children/add/{id}", func(w http.ResponseWriter, r *http.Request) {
-		vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-			id := r.PathValue("id")
-			idVal, _ := strconv.Atoi(id)
-			RenderTemplate(w, "children-add", getPerson(tx, idVal))
-		})
-	})
-	mux.Handle("GET /children/delete/{id}", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
-			id := r.PathValue("id")
-			idVal, _ := strconv.Atoi(id)
-			vbolt.Delete(tx, PersonBucket, idVal)
-			vbolt.TxCommit(tx)
-		})
+	mux.HandleFunc("/children", peoplePage)
+	mux.HandleFunc("/children/admin", personAdminPage)
+	mux.HandleFunc("GET /children/add", addPersonPage)
+	mux.HandleFunc("GET /children/add/{id}", editPersonPage)
+	mux.Handle("GET /children/delete/{id}", AuthHandler(http.HandlerFunc(deletePerson)))
+	mux.Handle("POST /children/add", AuthHandler(http.HandlerFunc(savePerson)))
+}
 
-		http.Redirect(w, r, "/children", http.StatusFound)
-	})))
-	mux.Handle("POST /children/add", AuthHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm()
-		birthdate := r.FormValue("birthdate")
-		name := r.FormValue("name")
-		id, _ := strconv.Atoi(r.FormValue("id"))
+func peoplePage(w http.ResponseWriter, r *http.Request) {
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		RenderTemplate(w, "children", getAllPeople(tx))
+	})
+}
+func personAdminPage(w http.ResponseWriter, r *http.Request) {
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		RenderTemplateBlock(w, "children", "childrenAdmin", getAllPeople(tx))
+	})
+}
+func addPersonPage(w http.ResponseWriter, r *http.Request) {
+	RenderTemplate(w, "children-add", nil)
+}
+func editPersonPage(w http.ResponseWriter, r *http.Request) {
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		id := r.PathValue("id")
+		idVal, _ := strconv.Atoi(id)
+		RenderTemplate(w, "children-add", getPerson(tx, idVal))
+	})
+}
+func deletePerson(w http.ResponseWriter, r *http.Request) {
+	vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
+		id := r.PathValue("id")
+		idVal, _ := strconv.Atoi(id)
+		vbolt.Delete(tx, PersonBucket, idVal)
+		vbolt.TxCommit(tx)
+	})
 
-		birthDateTime, _ := time.Parse("2006-01-02", birthdate)
+	http.Redirect(w, r, "/children", http.StatusFound)
+}
+func savePerson(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	birthdate := r.FormValue("birthdate")
+	name := r.FormValue("name")
+	id, _ := strconv.Atoi(r.FormValue("id"))
 
-		entry := Person{
-			BirthdayRaw: birthDateTime,
-			Name:        name,
-			Id:          id,
+	birthDateTime, _ := time.Parse("2006-01-02", birthdate)
+
+	entry := Person{
+		BirthdayRaw: birthDateTime,
+		Name:        name,
+		Id:          id,
+	}
+	vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
+		if entry.Id == 0 {
+			entry.Id = vbolt.NextIntId(tx, PersonBucket)
 		}
-		vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
-			if entry.Id == 0 {
-				entry.Id = vbolt.NextIntId(tx, PersonBucket)
-			}
-			vbolt.Write(tx, PersonBucket, entry.Id, &entry)
-			vbolt.TxCommit(tx)
-		})
+		vbolt.Write(tx, PersonBucket, entry.Id, &entry)
+		vbolt.TxCommit(tx)
+	})
 
-		http.Redirect(w, r, "/children", http.StatusFound)
-	})))
+	http.Redirect(w, r, "/children", http.StatusFound)
 }
