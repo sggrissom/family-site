@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"go.hasen.dev/vbolt"
 )
 
@@ -71,6 +72,29 @@ func RenderTemplate(w http.ResponseWriter, templateName string, data interface{}
 	}
 }
 
+func isUserAuthenticated(w http.ResponseWriter, r *http.Request) bool {
+	// Retrieve the JWT from the cookie
+	cookie, err := r.Cookie("auth_token")
+	if err != nil {
+		return false
+	}
+
+	// Parse and validate the JWT
+	token, err := jwt.ParseWithClaims(cookie.Value, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return jwtKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return false
+	}
+
+	return true
+}
+
 func RenderTemplateBlock(w http.ResponseWriter, templateName string, blockName string, data interface{}) {
 	var template = template.Must(template.ParseFiles("html/base.html", "html/"+templateName+".html"))
 	err := template.ExecuteTemplate(w, blockName, data)
@@ -82,8 +106,7 @@ func RenderTemplateBlock(w http.ResponseWriter, templateName string, blockName s
 
 func AuthHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//todo: implement auth
-		if true {
+		if !isUserAuthenticated(w, r) {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
