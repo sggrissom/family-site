@@ -24,7 +24,11 @@
     </main>
     <footer>
         <p>&copy; 2024 Family Website</p>
-        <a href="/login" style="float: right; font-size: small;">Admin Login</a>
+        {{ if .UserId }}
+            <a href="/profile/{{ .UserId }}" style="float: right; font-size: small;">Account {{ .Username }}</a>
+        {{ else }}
+            <a href="/login" style="float: right; font-size: small;">Admin Login</a>
+        {{ end }}
     </footer>
     {{ block "css" . }}{{ end }}
     {{ block "js" . }}{{ end }}

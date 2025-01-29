@@ -207,14 +207,14 @@ func RegisterMeasurementsPages(mux *http.ServeMux) {
 
 func mainHeightsPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplate(w, "height", map[string]interface{}{
+		RenderTemplateWithData(w, "height", map[string]interface{}{
 			"People": getAllPeople(tx),
 		})
 	})
 }
 func mainWeightsPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplate(w, "weight", map[string]interface{}{
+		RenderTemplateWithData(w, "weight", map[string]interface{}{
 			"People": getAllPeople(tx),
 		})
 	})
@@ -222,7 +222,7 @@ func mainWeightsPage(w http.ResponseWriter, r *http.Request) {
 
 func addHeightPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplate(w, "height-add", map[string]interface{}{
+		RenderTemplateWithData(w, "height-add", map[string]interface{}{
 			"People": getAllPeople(tx),
 		})
 	})
@@ -257,14 +257,14 @@ func saveHeightPage(w http.ResponseWriter, r *http.Request) {
 
 func personWeightPage(w http.ResponseWriter, r *http.Request) {
 	personId, _ := strconv.Atoi(r.PathValue("personId"))
-	RenderTemplate(w, "weight", map[string]interface{}{
+	RenderTemplateWithData(w, "weight", map[string]interface{}{
 		"Weight": QueryWeights(personId),
 	})
 }
 
 func addWeightPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplate(w, "weight-add", map[string]interface{}{
+		RenderTemplateWithData(w, "weight-add", map[string]interface{}{
 			"People": getAllPeople(tx),
 		})
 	})
@@ -308,13 +308,13 @@ func weightApi(w http.ResponseWriter, r *http.Request) {
 }
 func heightTablePage(w http.ResponseWriter, r *http.Request) {
 	personId, _ := strconv.Atoi(r.PathValue("id"))
-	RenderTemplate(w, "height-table", map[string]interface{}{
+	RenderTemplateWithData(w, "height-table", map[string]interface{}{
 		"Heights": QueryHeights(personId),
 	})
 }
 func weightTablePage(w http.ResponseWriter, r *http.Request) {
 	personId, _ := strconv.Atoi(r.PathValue("id"))
-	RenderTemplate(w, "weight-table", map[string]interface{}{
+	RenderTemplateWithData(w, "weight-table", map[string]interface{}{
 		"Weights": QueryWeights(personId),
 	})
 }

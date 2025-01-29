@@ -97,11 +97,11 @@ func RegisterLoginPages(mux *http.ServeMux) {
 }
 
 func loginPage(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "login", map[string]interface{}{})
+	RenderTemplate(w, "login")
 }
 
 func registerPage(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "register", map[string]interface{}{})
+	RenderTemplate(w, "register")
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {

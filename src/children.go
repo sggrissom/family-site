@@ -112,7 +112,7 @@ func RegisterChildrenPage(mux *http.ServeMux) {
 
 func peoplePage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplate(w, "children", map[string]interface{}{
+		RenderTemplateWithData(w, "children", map[string]interface{}{
 			"People": getAllPeople(tx),
 		})
 	})
@@ -123,13 +123,13 @@ func personAdminPage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 func addPersonPage(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "children-add", map[string]interface{}{})
+	RenderTemplate(w, "children-add")
 }
 func editPersonPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		id := r.PathValue("id")
 		idVal, _ := strconv.Atoi(id)
-		RenderTemplate(w, "children-add", map[string]interface{}{
+		RenderTemplateWithData(w, "children-add", map[string]interface{}{
 			"Person": getPerson(tx, idVal),
 		})
 	})

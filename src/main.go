@@ -18,7 +18,11 @@ const dbFile = "family.db"
 var db *vbolt.DB
 var Info vbolt.Info // define once
 
-func RenderTemplate(w http.ResponseWriter, templateName string, data map[string]interface{}) {
+func RenderTemplate(w http.ResponseWriter, templateName string) {
+	RenderTemplateWithData(w, "home", map[string]interface{}{})
+}
+
+func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map[string]interface{}) {
 	funcMap := template.FuncMap{
 		"formatDate": func(t time.Time) string {
 			if t.Year() == 1 {
@@ -65,6 +69,16 @@ func RenderTemplate(w http.ResponseWriter, templateName string, data map[string]
 		"html/"+templateName+".html",
 	))
 
+	username := w.Header().Get("username")
+	if username != "" {
+		data["Username"] = username
+		vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+			var userId int
+			vbolt.Read(tx, EmailBucket, username, &userId)
+			data["UserId"] = userId
+		})
+	}
+
 	err := tmpl.Execute(w, data)
 	if err != nil {
 		log.Printf("Template execution error: %v", err)
@@ -72,11 +86,11 @@ func RenderTemplate(w http.ResponseWriter, templateName string, data map[string]
 	}
 }
 
-func isUserAuthenticated(w http.ResponseWriter, r *http.Request) bool {
+func authenticateUser(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the JWT from the cookie
 	cookie, err := r.Cookie("auth_token")
 	if err != nil {
-		return false
+		return
 	}
 
 	// Parse and validate the JWT
@@ -88,11 +102,12 @@ func isUserAuthenticated(w http.ResponseWriter, r *http.Request) bool {
 	})
 
 	if err != nil || !token.Valid {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return false
+		return
 	}
 
-	return true
+	if claims, ok := token.Claims.(*Claims); ok {
+		w.Header().Add("username", claims.Username)
+	}
 }
 
 func RenderTemplateBlock(w http.ResponseWriter, templateName string, blockName string, data interface{}) {
@@ -106,7 +121,9 @@ func RenderTemplateBlock(w http.ResponseWriter, templateName string, blockName s
 
 func AuthHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !isUserAuthenticated(w, r) {
+		authenticateUser(w, r)
+		username := w.Header().Get("username")
+		if username == "" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -147,7 +164,8 @@ func main() {
 
 	// HTTPS server
 	mux.family.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		RenderTemplate(w, "home", map[string]interface{}{})
+		authenticateUser(w, r)
+		RenderTemplate(w, "home")
 	})
 
 	useTLS := flag.Bool("tls", false, "Enable TLS (HTTPS)")
