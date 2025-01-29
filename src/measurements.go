@@ -207,30 +207,23 @@ func RegisterMeasurementsPages(mux *http.ServeMux) {
 
 func mainHeightsPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplate(w, "height", struct {
-			People []Person
-		}{
-			People: getAllPeople(tx),
+		RenderTemplate(w, "height", map[string]interface{}{
+			"People": getAllPeople(tx),
 		})
 	})
 }
 func mainWeightsPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplate(w, "weight", struct {
-			People []Person
-		}{
-			People: getAllPeople(tx),
+		RenderTemplate(w, "weight", map[string]interface{}{
+			"People": getAllPeople(tx),
 		})
 	})
 }
 
 func addHeightPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplate(w, "height-add", struct {
-			Height PersonHeight
-			People []Person
-		}{
-			People: getAllPeople(tx),
+		RenderTemplate(w, "height-add", map[string]interface{}{
+			"People": getAllPeople(tx),
 		})
 	})
 }
@@ -264,16 +257,15 @@ func saveHeightPage(w http.ResponseWriter, r *http.Request) {
 
 func personWeightPage(w http.ResponseWriter, r *http.Request) {
 	personId, _ := strconv.Atoi(r.PathValue("personId"))
-	RenderTemplate(w, "weight", QueryWeights(personId))
+	RenderTemplate(w, "weight", map[string]interface{}{
+		"Weight": QueryWeights(personId),
+	})
 }
 
 func addWeightPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplate(w, "weight-add", struct {
-			Weight PersonWeight
-			People []Person
-		}{
-			People: getAllPeople(tx),
+		RenderTemplate(w, "weight-add", map[string]interface{}{
+			"People": getAllPeople(tx),
 		})
 	})
 }
@@ -316,11 +308,15 @@ func weightApi(w http.ResponseWriter, r *http.Request) {
 }
 func heightTablePage(w http.ResponseWriter, r *http.Request) {
 	personId, _ := strconv.Atoi(r.PathValue("id"))
-	RenderTemplate(w, "height-table", QueryHeights(personId))
+	RenderTemplate(w, "height-table", map[string]interface{}{
+		"Heights": QueryHeights(personId),
+	})
 }
 func weightTablePage(w http.ResponseWriter, r *http.Request) {
 	personId, _ := strconv.Atoi(r.PathValue("id"))
-	RenderTemplate(w, "weight-table", QueryWeights(personId))
+	RenderTemplate(w, "weight-table", map[string]interface{}{
+		"Weights": QueryWeights(personId),
+	})
 }
 func heightTableApi(w http.ResponseWriter, r *http.Request) {
 	milestones := []float64{0, 1.0 / 12, 2.0 / 12, 3.0 / 12,

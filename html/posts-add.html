@@ -8,7 +8,10 @@
             {{ end }}
         </select>
     </label>
-    <label>Entry Date: <input type="date" name="entryDate" value="{{ .Post.EntryDate | formatDateForInput }}"></label>
+    <label>Entry Date: 
+        <input type="date" name="entryDate" 
+            value="{{ if .Post }}{{ .Post.EntryDate | formatDateForInput }}{{ end }}">
+    </label>
     <input type="hidden" name="quill-content" id="quill-content" value="{{ .Post.Content }}">
     <div id="editor-container" class="editor"></div>
     <input type="hidden" name="id" value="{{ .Post.Id }}">

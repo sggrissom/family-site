@@ -1,6 +1,6 @@
 {{ define "title" }}children{{ end }}
 {{ define "content" }} 
-    {{ range . }}
+    {{ range .People }}
         <div class="person-card" onclick="toggleDetails(this)">
             <div class="person-summary">
                 <span>{{ .Name }}</span>

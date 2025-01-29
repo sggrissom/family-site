@@ -18,7 +18,7 @@ const dbFile = "family.db"
 var db *vbolt.DB
 var Info vbolt.Info // define once
 
-func RenderTemplate(w http.ResponseWriter, templateName string, data interface{}) {
+func RenderTemplate(w http.ResponseWriter, templateName string, data map[string]interface{}) {
 	funcMap := template.FuncMap{
 		"formatDate": func(t time.Time) string {
 			if t.Year() == 1 {
@@ -147,7 +147,7 @@ func main() {
 
 	// HTTPS server
 	mux.family.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		RenderTemplate(w, "home", nil)
+		RenderTemplate(w, "home", map[string]interface{}{})
 	})
 
 	useTLS := flag.Bool("tls", false, "Enable TLS (HTTPS)")

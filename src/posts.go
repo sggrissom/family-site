@@ -64,16 +64,15 @@ func RegisterPostPages(mux *http.ServeMux) {
 
 func postsPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplate(w, "posts", getAllPosts(tx))
+		RenderTemplate(w, "posts", map[string]interface{}{
+			"Posts": getAllPosts(tx),
+		})
 	})
 }
 func addPostPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplate(w, "posts-add", struct {
-			People []Person
-			Post   Post
-		}{
-			People: getAllPeople(tx),
+		RenderTemplate(w, "posts-add", map[string]interface{}{
+			"People": getAllPeople(tx),
 		})
 	})
 }
@@ -81,12 +80,9 @@ func editPostPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		id := r.PathValue("id")
 		idVal, _ := strconv.Atoi(id)
-		RenderTemplate(w, "posts-add", struct {
-			People []Person
-			Post   Post
-		}{
-			People: getAllPeople(tx),
-			Post:   getPost(tx, idVal),
+		RenderTemplate(w, "posts-add", map[string]interface{}{
+			"People": getAllPeople(tx),
+			"Post":   getPost(tx, idVal),
 		})
 	})
 }

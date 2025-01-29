@@ -1,9 +1,9 @@
 {{ define "title" }}add person{{ end }}
 {{ define "content" }}
     <form method="post" action="/children/add">
-        <label>Birthday: <input type="date" name="birthdate" value="{{ .Birthday }}"></label>
-        <label>Name: <input type="text" name="name" value="{{ .Name }}"></label>
-        <input type="hidden" name="id" value="{{ .Id }}">
+        <label>Birthday: <input type="date" name="birthdate" value="{{ .Person.Birthday }}"></label>
+        <label>Name: <input type="text" name="name" value="{{ .Person.Name }}"></label>
+        <input type="hidden" name="id" value="{{ .Person.Id }}">
         <button type="submit">Submit</button>
     </form>
 {{ end }}

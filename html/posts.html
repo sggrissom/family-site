@@ -1,6 +1,6 @@
 {{ define "title" }}posts{{ end }}
 {{ define "content" }}
-    {{ range . }}
+    {{ range .Posts }}
         <div class="post-card">
             <h2>Post Thing</h2>
             {{ .Content | displayHtml }}

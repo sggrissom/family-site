@@ -10,7 +10,7 @@
         </tr>
     </thead>
     <tbody>
-        {{ range . }}
+        {{ range .Weights }}
             <tr>
                 <td>{{ .Age | formatAge }}</td>
                 <td>{{ .Date | formatDate }}</td>
