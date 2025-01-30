@@ -19,7 +19,7 @@ var db *vbolt.DB
 var Info vbolt.Info // define once
 
 func RenderTemplate(w http.ResponseWriter, templateName string) {
-	RenderTemplateWithData(w, "home", map[string]interface{}{})
+	RenderTemplateWithData(w, templateName, map[string]interface{}{})
 }
 
 func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map[string]interface{}) {

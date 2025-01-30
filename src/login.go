@@ -94,6 +94,7 @@ func RegisterLoginPages(mux *http.ServeMux) {
 	mux.HandleFunc("POST /login", authenticateLogin)
 	mux.HandleFunc("GET /register", registerPage)
 	mux.HandleFunc("POST /register", createUser)
+	mux.HandleFunc("GET /profile/{id}", profilePage)
 }
 
 func loginPage(w http.ResponseWriter, r *http.Request) {
@@ -102,6 +103,10 @@ func loginPage(w http.ResponseWriter, r *http.Request) {
 
 func registerPage(w http.ResponseWriter, r *http.Request) {
 	RenderTemplate(w, "register")
+}
+
+func profilePage(w http.ResponseWriter, r *http.Request) {
+	RenderTemplate(w, "profile")
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
