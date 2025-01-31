@@ -6,12 +6,16 @@
             {{ .Content | displayHtml }}
             <div class="post-meta">
                 <span>{{ .Id }} - {{ .PersonId }} - {{ .EntryDate | formatDate }}</span>
-                <a href="/posts/edit/{{ .Id }}" class="edit-button">Edit</a>
+                {{ if $.isAdmin }}
+                    <a href="/posts/edit/{{ .Id }}" class="edit-button">Edit</a>
+                {{ end }}
             </div>
         </div>
     {{ end }}
     </div>
-    <a class="button" href="/posts/add">Add Post</a>
+    {{ if .isAdmin }}
+        <a class="button" href="/posts/add">Add Post</a>
+    {{ end }}
 {{ end }}
 
 {{ define "css" }}

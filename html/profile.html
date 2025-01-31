@@ -1,4 +1,7 @@
 {{ define "title"}}profile{{ end }}
 {{ define "content" }}
 <h2>profile</h2>
+<p>Username: {{ .Username }}</p>
+<p>User Id: {{ .UserId }}</p>
+<a class="button" href="/logout">Logout</a>
 {{ end }}

@@ -91,10 +91,11 @@ func AddUser(readTx *vbolt.Tx, req AddUserRequest) (err error) {
 
 func RegisterLoginPages(mux *http.ServeMux) {
 	mux.HandleFunc("GET /login", loginPage)
+	mux.HandleFunc("GET /logout", logout)
 	mux.HandleFunc("POST /login", authenticateLogin)
 	mux.HandleFunc("GET /register", registerPage)
 	mux.HandleFunc("POST /register", createUser)
-	mux.HandleFunc("GET /profile/{id}", profilePage)
+	mux.Handle("GET /profile/{id}", AuthHandler(http.HandlerFunc(profilePage)))
 }
 
 func loginPage(w http.ResponseWriter, r *http.Request) {
@@ -106,6 +107,7 @@ func registerPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func profilePage(w http.ResponseWriter, r *http.Request) {
+	authenticateUser(w, r)
 	RenderTemplate(w, "profile")
 }
 
@@ -166,4 +168,16 @@ func authenticateLogin(w http.ResponseWriter, r *http.Request) {
 	})
 
 	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+}
+
+func logout(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Unix(0, 0),
+	})
+
+	http.Redirect(w, r, "/", http.StatusFound)
 }

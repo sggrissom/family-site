@@ -18,7 +18,9 @@
     {{ else }}
         <p>No people found</p>
     {{ end }}
-    <a href="/children/add" class="button">Add More</a>
+    {{ if .isAdmin }}
+        <a href="/children/add" class="button">Add More</a>
+    {{ end }}
 {{ end }}
 
 {{ define "childrenAdmin" }}

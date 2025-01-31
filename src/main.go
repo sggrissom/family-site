@@ -76,6 +76,9 @@ func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map
 			var userId int
 			vbolt.Read(tx, EmailBucket, username, &userId)
 			data["UserId"] = userId
+			if userId == 1 {
+				data["isAdmin"] = true
+			}
 		})
 	}
 
@@ -117,6 +120,13 @@ func RenderTemplateBlock(w http.ResponseWriter, templateName string, blockName s
 		log.Printf("Template execution error: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func PublicHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authenticateUser(w, r)
+		next.ServeHTTP(w, r)
+	})
 }
 
 func AuthHandler(next http.Handler) http.Handler {
@@ -164,7 +174,6 @@ func main() {
 
 	// HTTPS server
 	mux.family.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		authenticateUser(w, r)
 		RenderTemplate(w, "home")
 	})
 

@@ -52,9 +52,9 @@ func getPost(tx *vbolt.Tx, id int) (post Post) {
 }
 
 func RegisterPostPages(mux *http.ServeMux) {
-	mux.HandleFunc("GET /posts", postsPage)
-	mux.HandleFunc("GET /posts/add", addPostPage)
-	mux.HandleFunc("GET /posts/edit/{id}", editPostPage)
+	mux.Handle("GET /posts", PublicHandler(http.HandlerFunc(postsPage)))
+	mux.Handle("GET /posts/add", AuthHandler(http.HandlerFunc(addPostPage)))
+	mux.Handle("GET /posts/edit/{id}", AuthHandler(http.HandlerFunc(editPostPage)))
 	mux.Handle("GET /posts/delete/{id}", AuthHandler(http.HandlerFunc(deletePost)))
 	mux.Handle("POST /posts/add", AuthHandler(http.HandlerFunc(savePost)))
 	mux.Handle("POST /post/upload-image", AuthHandler(http.HandlerFunc(uploadImage)))

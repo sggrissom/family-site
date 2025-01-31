@@ -102,10 +102,10 @@ func CalculateAge(birthday time.Time, includeMonths bool) string {
 }
 
 func RegisterChildrenPage(mux *http.ServeMux) {
-	mux.HandleFunc("/children", peoplePage)
-	mux.HandleFunc("/children/admin", personAdminPage)
-	mux.HandleFunc("GET /children/add", addPersonPage)
-	mux.HandleFunc("GET /children/add/{id}", editPersonPage)
+	mux.Handle("/children", PublicHandler(http.HandlerFunc(peoplePage)))
+	mux.Handle("/children/admin", AuthHandler(http.HandlerFunc(personAdminPage)))
+	mux.Handle("GET /children/add", AuthHandler(http.HandlerFunc(addPersonPage)))
+	mux.Handle("GET /children/add/{id}", PublicHandler(http.HandlerFunc(editPersonPage)))
 	mux.Handle("GET /children/delete/{id}", AuthHandler(http.HandlerFunc(deletePerson)))
 	mux.Handle("POST /children/add", AuthHandler(http.HandlerFunc(savePerson)))
 }

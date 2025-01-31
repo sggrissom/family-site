@@ -189,20 +189,19 @@ func getWeightMilestones(weights []PersonWeight, milestones []float64) (mileston
 }
 
 func RegisterMeasurementsPages(mux *http.ServeMux) {
-	mux.HandleFunc("GET /height", mainHeightsPage)
-	mux.HandleFunc("GET /weight", mainWeightsPage)
-	mux.HandleFunc("GET /height/add", addHeightPage)
+	mux.Handle("GET /height", PublicHandler(http.HandlerFunc(mainHeightsPage)))
+	mux.Handle("GET /weight", PublicHandler(http.HandlerFunc(mainWeightsPage)))
+	mux.Handle("GET /height/add", AuthHandler(http.HandlerFunc(addHeightPage)))
 	mux.Handle("POST /height/add", AuthHandler(http.HandlerFunc(saveHeightPage)))
-	mux.HandleFunc("GET /weight/{personId}", personWeightPage)
-	mux.HandleFunc("GET /weight/add", addWeightPage)
+	mux.Handle("GET /weight/add", AuthHandler(http.HandlerFunc(addWeightPage)))
 	mux.Handle("POST /weight/add", AuthHandler(http.HandlerFunc(saveWeightPage)))
-	mux.HandleFunc("GET /api/height/{id}", heightApi)
-	mux.HandleFunc("GET /api/weight/{id}", weightApi)
+	mux.Handle("GET /api/height/{id}", PublicHandler(http.HandlerFunc(heightApi)))
+	mux.Handle("GET /api/weight/{id}", PublicHandler(http.HandlerFunc(weightApi)))
 
-	mux.HandleFunc("GET /height/table/{id}", heightTablePage)
-	mux.HandleFunc("GET /weight/table/{id}", weightTablePage)
-	mux.HandleFunc("GET /api/height/table", heightTableApi)
-	mux.HandleFunc("GET /api/weight/table", weightTableApi)
+	mux.Handle("GET /height/table/{id}", PublicHandler(http.HandlerFunc(heightTablePage)))
+	mux.Handle("GET /weight/table/{id}", PublicHandler(http.HandlerFunc(weightTablePage)))
+	mux.Handle("GET /api/height/table", PublicHandler(http.HandlerFunc(heightTableApi)))
+	mux.Handle("GET /api/weight/table", PublicHandler(http.HandlerFunc(weightTableApi)))
 }
 
 func mainHeightsPage(w http.ResponseWriter, r *http.Request) {
@@ -253,13 +252,6 @@ func saveHeightPage(w http.ResponseWriter, r *http.Request) {
 	})
 
 	http.Redirect(w, r, "/height", http.StatusFound)
-}
-
-func personWeightPage(w http.ResponseWriter, r *http.Request) {
-	personId, _ := strconv.Atoi(r.PathValue("personId"))
-	RenderTemplateWithData(w, "weight", map[string]interface{}{
-		"Weight": QueryWeights(personId),
-	})
 }
 
 func addWeightPage(w http.ResponseWriter, r *http.Request) {
