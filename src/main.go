@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -18,56 +19,84 @@ const dbFile = "family.db"
 var db *vbolt.DB
 var Info vbolt.Info // define once
 
+var funcMap = template.FuncMap{
+	"formatDate": func(t time.Time) string {
+		if t.Year() == 1 {
+			return ""
+		}
+		return t.Format("Jan 2, 2006")
+	},
+	"formatDateForInput": func(t time.Time) string {
+		if t.Year() == 1 {
+			return ""
+		}
+		return t.Format("2006-01-02")
+	},
+	"formatNumber": func(n float64) string {
+		return fmt.Sprintf("%.2f", n)
+	},
+	"formatAge": func(age float64) string {
+		if age == 0 {
+			return "birth"
+		}
+
+		years := int(age)
+		months := int((age - float64(years)) * 12)
+
+		parts := []string{}
+		if years > 0 {
+			parts = append(parts, fmt.Sprintf("%d years", years))
+		}
+		if months > 0 {
+			parts = append(parts, fmt.Sprintf("%d months", months))
+		}
+		if len(parts) == 0 {
+			return "< 1 month"
+		}
+		return strings.Join(parts, ", ")
+	},
+	"displayHtml": func(content string) template.HTML {
+		return template.HTML(content)
+	},
+}
+
+var templatePaths map[string]string
+
+func preloadTemplates() error {
+	templatePaths = make(map[string]string)
+
+	files, err := filepath.Glob("html/**/*.html")
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		base := strings.TrimSuffix(filepath.Base(file), ".html")
+		templatePaths[base] = file
+	}
+
+	return nil
+}
+
 func RenderTemplate(w http.ResponseWriter, templateName string) {
 	RenderTemplateWithData(w, templateName, map[string]interface{}{})
 }
 
 func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map[string]interface{}) {
-	funcMap := template.FuncMap{
-		"formatDate": func(t time.Time) string {
-			if t.Year() == 1 {
-				return ""
-			}
-			return t.Format("Jan 2, 2006")
-		},
-		"formatDateForInput": func(t time.Time) string {
-			if t.Year() == 1 {
-				return ""
-			}
-			return t.Format("2006-01-02")
-		},
-		"formatNumber": func(n float64) string {
-			return fmt.Sprintf("%.2f", n)
-		},
-		"formatAge": func(age float64) string {
-			if age == 0 {
-				return "birth"
-			}
 
-			years := int(age)
-			months := int((age - float64(years)) * 12)
-
-			parts := []string{}
-			if years > 0 {
-				parts = append(parts, fmt.Sprintf("%d years", years))
-			}
-			if months > 0 {
-				parts = append(parts, fmt.Sprintf("%d months", months))
-			}
-			if len(parts) == 0 {
-				return "< 1 month"
-			}
-			return strings.Join(parts, ", ")
-		},
-		"displayHtml": func(content string) template.HTML {
-			return template.HTML(content)
-		},
+	path, exists := templatePaths[templateName]
+	if !exists {
+		log.Printf("Template not found: %v", templateName)
+		http.Error(w, "Template not found", http.StatusInternalServerError)
+		return
 	}
 
-	tmpl := template.Must(template.New("base.html").Funcs(funcMap).ParseFiles(
-		"html/base.html",
-		"html/"+templateName+".html",
-	))
+	tmpl, err := template.New("base.html").Funcs(funcMap).ParseFiles("html/common/base.html", path)
+	if err != nil {
+		log.Printf("Template failure: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	username := w.Header().Get("username")
 	if username != "" {
@@ -82,7 +111,7 @@ func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map
 		})
 	}
 
-	err := tmpl.Execute(w, data)
+	err = tmpl.Execute(w, data)
 	if err != nil {
 		log.Printf("Template execution error: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -90,13 +119,11 @@ func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map
 }
 
 func authenticateUser(w http.ResponseWriter, r *http.Request) {
-	// Retrieve the JWT from the cookie
 	cookie, err := r.Cookie("auth_token")
 	if err != nil {
 		return
 	}
 
-	// Parse and validate the JWT
 	token, err := jwt.ParseWithClaims(cookie.Value, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method")
@@ -144,7 +171,10 @@ func AuthHandler(next http.Handler) http.Handler {
 func main() {
 	fmt.Println("family site starting")
 
-	// Initialize the database
+	if preloadTemplates() != nil {
+		log.Fatal("error preloading templates")
+	}
+
 	db = vbolt.Open(dbFile)
 	vbolt.InitBuckets(db, &Info)
 	defer db.Close()
