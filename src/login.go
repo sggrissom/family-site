@@ -95,7 +95,7 @@ func RegisterLoginPages(mux *http.ServeMux) {
 	mux.HandleFunc("POST /login", authenticateLogin)
 	mux.HandleFunc("GET /register", registerPage)
 	mux.HandleFunc("POST /register", createUser)
-	mux.Handle("GET /profile/{id}", AuthHandler(http.HandlerFunc(profilePage)))
+	mux.Handle("GET /profile", AuthHandler(http.HandlerFunc(profilePage)))
 }
 
 func loginPage(w http.ResponseWriter, r *http.Request) {

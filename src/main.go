@@ -174,6 +174,7 @@ func main() {
 
 	// HTTPS server
 	mux.family.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		authenticateUser(w, r)
 		RenderTemplate(w, "home")
 	})
 
