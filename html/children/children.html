@@ -9,9 +9,7 @@
             <div class="person-details">
                 <p>b-day: {{ .BirthdayRaw | formatDate }}</p>
                 <p>age: {{ .Age }}</p>
-                <p>latest height: {{ .Height }}</p>
                 <p><a href="/height/table/{{ .Id }}">height table</a></p>
-                <p>latest weight: {{ .Weight }}</p>
                 <p><a href="/weight/table/{{ .Id }}">weight table</a></p>
             </div>
         </div>

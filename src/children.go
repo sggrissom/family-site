@@ -17,8 +17,6 @@ type Person struct {
 	Name        string
 	BirthdayRaw time.Time
 	Age         string
-	Height      string
-	Weight      string
 }
 
 func PackPerson(self *Person, buf *vpack.Buffer) {
@@ -59,18 +57,6 @@ func getPerson(tx *vbolt.Tx, id int) (person Person) {
 }
 
 func prepPerson(person *Person) {
-	heights := QueryHeights(person.Id)
-	if len(heights) > 0 {
-		person.Height = strconv.FormatFloat(heights[len(heights)-1].Inches, 'f', -1, 64)
-	} else {
-		person.Height = "none"
-	}
-	weights := QueryWeights(person.Id)
-	if len(weights) > 0 {
-		person.Weight = strconv.FormatFloat(weights[len(weights)-1].Pounds, 'f', -1, 64)
-	} else {
-		person.Weight = "none"
-	}
 	person.Age = CalculateAge(person.BirthdayRaw, true)
 }
 
