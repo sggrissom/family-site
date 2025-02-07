@@ -7,7 +7,7 @@
                 <span class="toggle-icon">▼</span>
             </div>
             <div class="person-details">
-                <p>b-day: {{ .Birthday }}</p>
+                <p>b-day: {{ .BirthdayRaw | formatDate }}</p>
                 <p>age: {{ .Age }}</p>
                 <p>latest height: {{ .Height }}</p>
                 <p><a href="/height/table/{{ .Id }}">height table</a></p>

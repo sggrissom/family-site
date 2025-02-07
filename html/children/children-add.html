@@ -1,7 +1,7 @@
 {{ define "title" }}add person{{ end }}
 {{ define "content" }}
     <form method="post" action="/children/add">
-        <label>Birthday: <input type="date" name="birthdate" value="{{ .Person.Birthday }}"></label>
+        <label>Birthday: <input type="date" name="birthdate" value="{{ .Person.BirthdayRaw | formatDateForInput }}"></label>
         <label>Name: <input type="text" name="name" value="{{ .Person.Name }}"></label>
         <input type="hidden" name="id" value="{{ .Person.Id }}">
         <button type="submit">Submit</button>

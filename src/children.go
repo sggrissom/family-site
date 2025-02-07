@@ -16,7 +16,6 @@ type Person struct {
 	Id          int
 	Name        string
 	BirthdayRaw time.Time
-	Birthday    string
 	Age         string
 	Height      string
 	Weight      string
@@ -33,7 +32,7 @@ var PersonBucket = vbolt.Bucket(&Info, "people", vpack.FInt, PackPerson)
 
 func getAllPeople(tx *vbolt.Tx) (people []Person) {
 	vbolt.IterateAll(tx, PersonBucket, func(key int, value Person) bool {
-		prepPerson(&value, "January 02, 2006")
+		prepPerson(&value)
 		generic.Append(&people, value)
 		return true
 	})
@@ -55,11 +54,11 @@ func getAllPeopleMap(tx *vbolt.Tx) (peopleMap map[int]Person) {
 
 func getPerson(tx *vbolt.Tx, id int) (person Person) {
 	vbolt.Read(tx, PersonBucket, id, &person)
-	prepPerson(&person, "2006-01-02")
+	prepPerson(&person)
 	return person
 }
 
-func prepPerson(person *Person, format string) {
+func prepPerson(person *Person) {
 	heights := QueryHeights(person.Id)
 	if len(heights) > 0 {
 		person.Height = strconv.FormatFloat(heights[len(heights)-1].Inches, 'f', -1, 64)
@@ -72,7 +71,6 @@ func prepPerson(person *Person, format string) {
 	} else {
 		person.Weight = "none"
 	}
-	person.Birthday = person.BirthdayRaw.Format(format)
 	person.Age = CalculateAge(person.BirthdayRaw, true)
 }
 
