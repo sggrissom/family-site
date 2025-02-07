@@ -21,13 +21,13 @@ var Info vbolt.Info // define once
 
 var funcMap = template.FuncMap{
 	"formatDate": func(t time.Time) string {
-		if t.Year() == 1 {
+		if t.IsZero() {
 			return ""
 		}
 		return t.Format("Jan 2, 2006")
 	},
 	"formatDateForInput": func(t time.Time) string {
-		if t.Year() == 1 {
+		if t.IsZero() {
 			return ""
 		}
 		return t.Format("2006-01-02")
