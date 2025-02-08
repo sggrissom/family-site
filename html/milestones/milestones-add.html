@@ -1,0 +1,88 @@
+{{ define "title" }}add new milestone{{ end }}
+{{ define "content" }}
+<form method="post" action="/milestones/add">
+    <label>Person:
+        <select name="personId" value="{{ .Milestone.PersonId }}">
+            {{ range .People }}
+            <option value="{{ .Id }}">{{ .Name }}</option>
+            {{ end }}
+        </select>
+    </label>
+    <label>Milestone Date: <input type="date" name="measureDate" value="{{ .Milestone.Date}}"></label>
+
+    <div class="form-group">
+        <label for="milestoneType">Milestone Type:</label>
+        <select id="milestoneType" name="milestoneType">
+            <option value="height">Height</option>
+            <option value="weight">Weight</option>
+            <option value="crawling">Crawling</option>
+            <option value="walking">Walking</option>
+            <option value="first_word">First Word</option>
+        </select>
+    </div>
+
+    <div id="numericFields" style="display: none;">
+        <div class="form-group">
+            <label for="numericValue">Value:</label>
+            <input type="text" id="numericValue" name="numericValue" placeholder="e.g., 15.5">
+        </div>
+        <div class="form-group">
+            <label for="unit">Unit:</label>
+            <input type="text" id="unit" name="unit" placeholder="e.g., inches or pounds">
+        </div>
+    </div>
+
+    <div id="textFields" style="display: none;">
+        <div class="form-group">
+            <label for="textValue">Description:</label>
+            <input type="text" id="textValue" name="textValue" placeholder="e.g., 'First step taken' or 'Said mama'">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="notes">Additional Notes:</label>
+        <textarea id="notes" name="notes" rows="4" cols="50" placeholder="Enter any extra details here"></textarea>
+    </div>
+
+    <input type="hidden" name="id" value="{{ .Milestone.Id }}">
+    <button type="submit">Submit Milestone</button>
+</form>
+{{ end }}
+
+{{ define "css" }}
+    <style>
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+{{ end }}
+
+{{ define "js" }}
+    <script>
+        // This function shows/hides input fields based on the selected milestone type.
+        function updateFields() {
+            var type = document.getElementById("milestoneType").value;
+            var numericFields = document.getElementById("numericFields");
+            var textFields = document.getElementById("textFields");
+
+            // For measurement milestones (height/weight), display numeric fields.
+            if (type === "height" || type === "weight") {
+                numericFields.style.display = "block";
+                textFields.style.display = "none";
+            } else {
+                numericFields.style.display = "none";
+                textFields.style.display = "block";
+            }
+        }
+        // Update fields on page load and when the selection changes.
+        window.onload = function () {
+            updateFields();
+            document.getElementById("milestoneType").addEventListener("change", updateFields);
+        };
+    </script>
+{{ end }}

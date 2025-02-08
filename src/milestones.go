@@ -83,7 +83,11 @@ func milestonesPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func addMilestonesPage(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "milestones-add")
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		RenderTemplateWithData(w, "milestones-add", map[string]interface{}{
+			"People": getAllPeople(tx),
+		})
+	})
 }
 
 func editMilestonesPage(w http.ResponseWriter, r *http.Request) {
