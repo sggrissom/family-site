@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -19,6 +20,23 @@ const (
 	MilestoneWalking
 	MilestoneFirstWord
 )
+
+func parseMilestoneType(s string) (MilestoneType, error) {
+	switch s {
+	case "height":
+		return MilestoneHeight, nil
+	case "weight":
+		return MilestoneWeight, nil
+	case "crawling":
+		return MilestoneCrawling, nil
+	case "walking":
+		return MilestoneWalking, nil
+	case "first_word":
+		return MilestoneFirstWord, nil
+	default:
+		return 0, fmt.Errorf("unknown milestone type: %s", s)
+	}
+}
 
 type Milestone struct {
 	Id           int
@@ -79,7 +97,9 @@ func RegisterMilestonesPages(mux *http.ServeMux) {
 }
 
 func milestonesPage(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "milestones")
+	RenderTemplateWithData(w, "milestones", map[string]interface{}{
+		"Milestones": QueryMilestones(1),
+	})
 }
 
 func addMilestonesPage(w http.ResponseWriter, r *http.Request) {
@@ -103,12 +123,10 @@ func saveMilestone(w http.ResponseWriter, r *http.Request) {
 	numericValue, _ := strconv.ParseFloat(r.FormValue("numericValue"), 64)
 	personId, _ := strconv.Atoi(r.FormValue("personId"))
 	id, _ := strconv.Atoi(r.FormValue("id"))
-	//milestoneType := r.FormValue("milestoneType")
-	milestoneType := MilestoneWeight
+	milestoneType, _ := parseMilestoneType(r.FormValue("milestoneType"))
 	unit := r.FormValue("unit")
 	textValue := r.FormValue("textValue")
 	notes := r.FormValue("notes")
-	age, _ := strconv.ParseFloat(r.FormValue("age"), 64)
 
 	measureDateTime, _ := time.Parse("2006-01-02", measureDate)
 
@@ -121,7 +139,7 @@ func saveMilestone(w http.ResponseWriter, r *http.Request) {
 		Unit:         unit,
 		TextValue:    textValue,
 		Notes:        notes,
-		Age:          age,
+		Age:          0,
 	}
 	vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
 		if entry.Id == 0 {

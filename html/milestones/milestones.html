@@ -1,5 +1,16 @@
 {{ define "title" }}milestone title{{ end }}
 {{ define "content" }}
 <p>milestone content</p>
+{{ range .Milestones }}
+    <p>{{ .Id }}</p>
+    <p>{{ .PersonId }}</p>
+    <p>{{ .Type }}</p>
+    <p>{{ .Date | formatDate }}</p>
+    <p>{{ .Age }}</p>
+    <p>{{ .NumericValue }}</p>
+    <p>{{ .Unit }}</p>
+    <p>{{ .TextValue }}</p>
+    <p>{{ .Notes }}</p>
+{{ end }}
 <a class="button" href="/milestones/add">Add Milestone</a>
 {{ end }}

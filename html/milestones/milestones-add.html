@@ -1,14 +1,18 @@
 {{ define "title" }}add new milestone{{ end }}
 {{ define "content" }}
 <form method="post" action="/milestones/add">
-    <label>Person:
+    <div class="form-group">
+        <label>Person:</label>
         <select name="personId" value="{{ .Milestone.PersonId }}">
             {{ range .People }}
             <option value="{{ .Id }}">{{ .Name }}</option>
             {{ end }}
         </select>
-    </label>
-    <label>Milestone Date: <input type="date" name="measureDate" value="{{ .Milestone.Date}}"></label>
+    </div>
+    <div class="form-group">
+        <label for="measureDate">Milestone Date:</label>
+        <input type="date" name="measureDate" value="{{ .Milestone.Date}}">
+    </div>
 
     <div class="form-group">
         <label for="milestoneType">Milestone Type:</label>
