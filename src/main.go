@@ -58,6 +58,9 @@ var funcMap = template.FuncMap{
 	"displayHtml": func(content string) template.HTML {
 		return template.HTML(content)
 	},
+	"formatMilestoneType": func(milestoneType MilestoneType) string {
+		return parseMilestoneTypeLabel(milestoneType)
+	},
 }
 
 var templatePaths map[string]string

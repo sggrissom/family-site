@@ -2,15 +2,15 @@
 {{ define "content" }}
 <p>milestone content</p>
 {{ range .Milestones }}
-    <p>{{ .Id }}</p>
-    <p>{{ .PersonId }}</p>
-    <p>{{ .Type }}</p>
-    <p>{{ .Date | formatDate }}</p>
-    <p>{{ .Age }}</p>
-    <p>{{ .NumericValue }}</p>
-    <p>{{ .Unit }}</p>
-    <p>{{ .TextValue }}</p>
-    <p>{{ .Notes }}</p>
+    <p>Id: {{ .Id }}</p>
+    <p>PersonId: {{ .PersonId }}</p>
+    <p>Type: {{ .Type | formatMilestoneType }}</p>
+    <p>Date: {{ .Date | formatDate }}</p>
+    <p>Age: {{ .Age }}</p>
+    <p>Numeric: {{ .NumericValue }}</p>
+    <p>Unit: {{ .Unit }}</p>
+    <p>TextValue: {{ .TextValue }}</p>
+    <p>Notes: {{ .Notes }}</p>
 {{ end }}
 <a class="button" href="/milestones/add">Add Milestone</a>
 {{ end }}

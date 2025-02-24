@@ -21,6 +21,23 @@ const (
 	MilestoneFirstWord
 )
 
+func parseMilestoneTypeLabel(t MilestoneType) string {
+	switch t {
+	case MilestoneHeight:
+		return "height"
+	case MilestoneWeight:
+		return "weight"
+	case MilestoneCrawling:
+		return "crawling"
+	case MilestoneWalking:
+		return "walking"
+	case MilestoneFirstWord:
+		return "first_word"
+	default:
+		return ""
+	}
+}
+
 func parseMilestoneType(s string) (MilestoneType, error) {
 	switch s {
 	case "height":
@@ -89,7 +106,7 @@ func QueryMilestones(personId int) (milestones []Milestone) {
 }
 
 func RegisterMilestonesPages(mux *http.ServeMux) {
-	mux.Handle("GET /milestones", PublicHandler(http.HandlerFunc(milestonesPage)))
+	mux.Handle("GET /milestones/{id}", PublicHandler(http.HandlerFunc(milestonesPage)))
 	mux.Handle("GET /milestones/add", AuthHandler(http.HandlerFunc(addMilestonesPage)))
 	mux.Handle("GET /milestones/edit/{id}", AuthHandler(http.HandlerFunc(editMilestonesPage)))
 	mux.Handle("GET /milestones/delete/{id}", AuthHandler(http.HandlerFunc(deleteMilestone)))
@@ -97,8 +114,13 @@ func RegisterMilestonesPages(mux *http.ServeMux) {
 }
 
 func milestonesPage(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	idVal, err := strconv.Atoi(id)
+	if err != nil {
+		idVal = 1
+	}
 	RenderTemplateWithData(w, "milestones", map[string]interface{}{
-		"Milestones": QueryMilestones(1),
+		"Milestones": QueryMilestones(idVal),
 	})
 }
 
