@@ -109,7 +109,7 @@ const LineChart = (function() {
             const dataset = {
                 label: `${data[0].PersonName} (ID:${personId})`,
                 data: dataFormatter(data),
-                borderColor: getRandomColor(),
+                borderColor: getIndexedColor(chartData.datasets.length),
                 backgroundColor: 'rgba(0, 0, 0, 0)',
                 fill: false,
                 tension: 0.1,
@@ -138,14 +138,15 @@ const LineChart = (function() {
         lineChart.update();
     }
 
-    // Utility function to generate random colors
-    function getRandomColor() {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
+    function getIndexedColor(index) {
+        const colors = [
+            "#39e3cf",
+            "#d048fa",
+            "#fa48b0",
+            "#f1fa48",
+            "#fa9248",
+        ]
+        return colors[index] ?? "#00000";
     }
 
     return {
