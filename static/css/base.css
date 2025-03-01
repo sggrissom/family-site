@@ -5,9 +5,12 @@
 }
 
 :root {
-  --primary-color: #3498db;     /* Header/Nav color */
-  --background-color: #ffffff;  /* Page background */
-  --text-color: #333333;        /* Body text */
+  --primary-color: #a91ceb;
+  --primary-hover-color: #8c19c2;
+  --background-color: #ffffff;
+  --accent-color: #39f7e1;
+  --accent-hover-color: #32d9c5;
+  --text-color: #333333;
   --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
@@ -101,24 +104,23 @@ button,.button {
   color: #fff;
   font-size: 0.9rem;
   text-align: center;
-  text-decoration: none;  /* Ensures no underline for links */
+  text-decoration: none;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  margin: 0.2rem;         /* Small margin around buttons */
+  margin: 0.2rem;
 }
 
-button,.button:hover {
-  background-color: #2878af; /* Slightly darker shade on hover */
+button:hover,.button:hover {
+  background-color: var(--primary-hover-color);
 }
 
-/* Optional: Secondary Button Variant */
 .button-secondary {
-  background-color: var(--accent-color); /* e.g., #2ecc71 if you want a green accent */
+  background-color: var(--accent-color);
 }
 .button-secondary:hover {
-  background-color: #27ae60;
+  background-color: var(--accent-hover-color);
 }
 
 form {
