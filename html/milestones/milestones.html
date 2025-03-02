@@ -2,15 +2,24 @@
 {{ define "content" }}
 <p>milestone content</p>
 {{ range .Milestones }}
-    <p>Id: {{ .Id }}</p>
-    <p>PersonId: {{ .PersonId }}</p>
-    <p>Type: {{ .Type | formatMilestoneType }}</p>
-    <p>Date: {{ .Date | formatDate }}</p>
-    <p>Age: {{ .Age }}</p>
-    <p>Numeric: {{ .NumericValue }}</p>
-    <p>Unit: {{ .Unit }}</p>
-    <p>TextValue: {{ .TextValue }}</p>
-    <p>Notes: {{ .Notes }}</p>
+    <div class="post-card">
+        <p>Type: {{ .Type | formatMilestoneType }}</p>
+        {{ if .TextValue }}
+            <p>TextValue: {{ .TextValue }}</p>
+        {{ else }}
+            <p>Numeric: {{ .NumericValue }} {{ .Unit }}</p>
+        {{ end }}
+        {{ if .Notes }}
+            <p>{{ .Notes }}</p>
+        {{ end }}
+        <div class="post-meta">
+            <span>{{ .Id }} - {{ .Date | formatDate }} - Age: {{ .Age }}</span>
+        </div>
+    </div>
 {{ end }}
 <a class="button" href="/milestones/add">Add Milestone</a>
+{{ end }}
+
+{{ define "css" }}
+<link href="/static/css/posts.css" rel="stylesheet" />
 {{ end }}
