@@ -86,7 +86,6 @@ func RenderTemplate(w http.ResponseWriter, templateName string) {
 }
 
 func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map[string]interface{}) {
-
 	path, exists := templatePaths[templateName]
 	if !exists {
 		log.Printf("Template not found: %v", templateName)
@@ -113,6 +112,51 @@ func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map
 			}
 		})
 	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Template execution error: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+func RenderAdminTemplate(w http.ResponseWriter, r *http.Request, templateName string) {
+	RenderAdminTemplateWithData(w, r, templateName, map[string]interface{}{})
+}
+
+func RenderAdminTemplateWithData(w http.ResponseWriter, r *http.Request, templateName string, data map[string]interface{}) {
+	authenticateUser(w, r)
+
+	path, exists := templatePaths[templateName]
+	if !exists {
+		log.Printf("Template not found: %v", templateName)
+		http.Error(w, "Template not found", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl, err := template.New(templateName + ".html").Funcs(funcMap).ParseFiles(path)
+	if err != nil {
+		log.Printf("Template failure: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	username := w.Header().Get("username")
+	if username == "" {
+		http.Error(w, "auth failure", http.StatusInternalServerError)
+		return
+	}
+	data["Username"] = username
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		var userId int
+		vbolt.Read(tx, EmailBucket, username, &userId)
+		data["UserId"] = userId
+		if userId == 1 {
+			data["isAdmin"] = true
+		} else {
+			http.Error(w, "user not an admin", http.StatusInternalServerError)
+			return
+		}
+	})
 
 	err = tmpl.Execute(w, data)
 	if err != nil {
@@ -196,6 +240,7 @@ func main() {
 	RegisterPostPages(mux.family)
 	RegisterLoginPages(mux.family)
 	RegisterMilestonesPages(mux.family)
+	RegisterAdminPages(mux.family)
 
 	// HTTP to HTTPS redirect handler
 	go func() {
