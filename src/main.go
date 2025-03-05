@@ -64,9 +64,11 @@ var funcMap = template.FuncMap{
 }
 
 var templatePaths map[string]string
+var adminPaths map[string]string
 
 func preloadTemplates() error {
 	templatePaths = make(map[string]string)
+	adminPaths = make(map[string]string)
 
 	files, err := filepath.Glob("html/**/*.html")
 	if err != nil {
@@ -76,6 +78,16 @@ func preloadTemplates() error {
 	for _, file := range files {
 		base := strings.TrimSuffix(filepath.Base(file), ".html")
 		templatePaths[base] = file
+	}
+
+	adminFiles, err := filepath.Glob("html/admin/*.html")
+	if err != nil {
+		return err
+	}
+
+	for _, file := range adminFiles {
+		base := strings.TrimSuffix(filepath.Base(file), ".html")
+		adminPaths[base] = file
 	}
 
 	return nil
@@ -126,14 +138,14 @@ func RenderAdminTemplate(w http.ResponseWriter, r *http.Request, templateName st
 func RenderAdminTemplateWithData(w http.ResponseWriter, r *http.Request, templateName string, data map[string]interface{}) {
 	authenticateUser(w, r)
 
-	path, exists := templatePaths[templateName]
+	path, exists := adminPaths[templateName]
 	if !exists {
 		log.Printf("Template not found: %v", templateName)
 		http.Error(w, "Template not found", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl, err := template.New(templateName + ".html").Funcs(funcMap).ParseFiles(path)
+	tmpl, err := template.New("admin.html").Funcs(funcMap).ParseFiles("html/admin/admin.html", path)
 	if err != nil {
 		log.Printf("Template failure: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
