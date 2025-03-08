@@ -12,12 +12,27 @@ import (
 	"go.hasen.dev/vpack"
 )
 
+type Family struct {
+	Id          int
+	Name        string
+	OwningUsers []int
+}
+
 type Person struct {
 	Id          int
 	Name        string
 	BirthdayRaw time.Time
 	Age         string
 }
+
+func PackFamily(self *Family, buf *vpack.Buffer) {
+	vpack.Version(1, buf)
+	vpack.Int(&self.Id, buf)
+	vpack.String(&self.Name, buf)
+	vpack.Slice(&self.OwningUsers, vpack.Int, buf)
+}
+
+var FamilyBucket = vbolt.Bucket(&Info, "family", vpack.FInt, PackFamily)
 
 func PackPerson(self *Person, buf *vpack.Buffer) {
 	vpack.Version(1, buf)
@@ -92,6 +107,8 @@ func RegisterChildrenPage(mux *http.ServeMux) {
 	mux.Handle("GET /children/add/{id}", PublicHandler(http.HandlerFunc(editPersonPage)))
 	mux.Handle("GET /children/delete/{id}", AuthHandler(http.HandlerFunc(deletePerson)))
 	mux.Handle("POST /children/add", AuthHandler(http.HandlerFunc(savePerson)))
+
+	mux.Handle("POST /family/create", AuthHandler(http.HandlerFunc(saveFamily)))
 }
 
 func peoplePage(w http.ResponseWriter, r *http.Request) {
@@ -146,6 +163,27 @@ func savePerson(w http.ResponseWriter, r *http.Request) {
 			entry.Id = vbolt.NextIntId(tx, PersonBucket)
 		}
 		vbolt.Write(tx, PersonBucket, entry.Id, &entry)
+		vbolt.TxCommit(tx)
+	})
+
+	http.Redirect(w, r, "/children", http.StatusFound)
+}
+
+func saveFamily(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	name := r.FormValue("name")
+	id, _ := strconv.Atoi(r.FormValue("id"))
+
+	entry := Family{
+		Name:        name,
+		Id:          id,
+		OwningUsers: []int{},
+	}
+	vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
+		if entry.Id == 0 {
+			entry.Id = vbolt.NextIntId(tx, FamilyBucket)
+		}
+		vbolt.Write(tx, FamilyBucket, entry.Id, &entry)
 		vbolt.TxCommit(tx)
 	})
 

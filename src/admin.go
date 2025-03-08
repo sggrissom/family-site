@@ -18,7 +18,7 @@ func adminPage(w http.ResponseWriter, r *http.Request) {
 
 func usersPage(w http.ResponseWriter, r *http.Request) {
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-		RenderAdminTemplateWithData(w, r, "users", map[string]interface{}{
+		RenderAdminTemplateWithData(w, r, "users", map[string]any{
 			"Users": GetAllUsers(tx),
 		})
 	})
