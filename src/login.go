@@ -16,15 +16,36 @@ var jwtKey = []byte("test-secret-key") //todo: secret, just testing for now
 
 // Models
 
+type RoleType int
+
+const (
+	Admin RoleType = iota
+	Owner
+	Viewer
+)
+
+type StatusType int
+
+const (
+	Active StatusType = iota
+	Suspended
+)
+
 type User struct {
-	Id    int
-	Email string
+	Id        int
+	Email     string
+	Role      RoleType
+	Status    StatusType
+	LastLogin time.Time
 }
 
 func PackUser(self *User, buf *vpack.Buffer) {
 	vpack.Version(1, buf)
 	vpack.Int(&self.Id, buf)
 	vpack.String(&self.Email, buf)
+	vpack.IntEnum(&self.Role, buf)
+	vpack.IntEnum(&self.Status, buf)
+	vpack.Time(&self.LastLogin, buf)
 }
 
 // Buckets
@@ -64,6 +85,8 @@ func AddUserTx(tx *vbolt.Tx, req AddUserRequest, hash []byte) User {
 	var user User
 	user.Id = vbolt.NextIntId(tx, UsersBucket)
 	user.Email = req.Email
+	user.Status = Active
+	user.Role = Viewer
 
 	vbolt.Write(tx, UsersBucket, user.Id, &user)
 	vbolt.Write(tx, PasswordBucket, user.Id, &hash)

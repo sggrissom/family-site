@@ -1,8 +1,127 @@
 
 {{ define "content" }}
-      <h2>Users page</h2>
-      {{ range .Users }}
-            <p>{{ .Id }}</p>
-            <p>{{ .Email }}</p>
-      {{ end }}
+  <h1>Manage Users</h1>
+
+  <div class="bulk-actions">
+    <input type="checkbox" id="select-all" />
+    <label for="select-all">Select All</label>
+
+    <select id="bulk-action-dropdown">
+      <option value="">Bulk Actions</option>
+      <option value="reset">Reset Password</option>
+    </select>
+    <button id="apply-bulk">Apply</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>User ID</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Last Login</th>
+        <th class="actions">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Users }}
+      <tr>
+        <td>
+          <input type="checkbox" class="user-checkbox" data-userid="{{.Id}}">
+        </td>
+        <td>{{.Id}}</td>
+        <td>{{.Email}}</td>
+        <td>{{.Role}}</td>
+        <td>{{.Status}}</td>
+        <td>{{.LastLogin | formatDate}}</td>
+        <td>
+          <select class="action-dropdown" data-userid="{{.Id}}">
+            <option value="">Select Action</option>
+            <option value="reset">Reset Password</option>
+            <option value="login">Log In as This User</option>
+          </select>
+          <button class="apply-action" data-userid="{{.Id}}">Go</button>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+
+{{ end }}
+
+{{ define "js" }}
+  <script>
+    document.getElementById('select-all').addEventListener('change', function(event) {
+      var checkboxes = document.querySelectorAll('.user-checkbox');
+      checkboxes.forEach(function(checkbox) {
+        checkbox.checked = event.target.checked;
+      });
+    });
+
+    document.getElementById('apply-bulk').addEventListener('click', function() {
+      var bulkAction = document.getElementById('bulk-action-dropdown').value;
+      if (!bulkAction) {
+        alert('Please select a bulk action.');
+        return;
+      }
+      var selectedUsers = [];
+      document.querySelectorAll('.user-checkbox:checked').forEach(function(checkbox) {
+        selectedUsers.push(checkbox.getAttribute('data-userid'));
+      });
+      if (selectedUsers.length === 0) {
+        alert('No users selected.');
+        return;
+      }
+      alert('Performing "' + bulkAction + '" on users: ' + selectedUsers.join(', '));
+    });
+
+    document.querySelectorAll('.apply-action').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var userId = button.getAttribute('data-userid');
+        var dropdown = document.querySelector('.action-dropdown[data-userid="'+userId+'"]');
+        var action = dropdown.value;
+        if (!action) {
+          alert('Please select an action for user ' + userId);
+          return;
+        }
+        alert('Performing "' + action + '" for user ' + userId);
+      });
+    });
+  </script>
+{{ end }}
+
+{{ define "css" }}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    .actions {
+      min-width: 150px;
+    }
+    .bulk-actions {
+      margin-bottom: 10px;
+    }
+    .bulk-actions label {
+      margin-left: 5px;
+      margin-right: 15px;
+    }
+  </style>
 {{ end }}

@@ -236,6 +236,20 @@ func main() {
 
 	db = vbolt.Open(dbFile)
 	vbolt.InitBuckets(db, &Info)
+
+	// migrations
+	vbolt.ApplyDBProcess(db, "2025-0307-reset-user", func() {
+		vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
+			tx.DeleteBucket([]byte(UsersBucket.Name))
+			tx.DeleteBucket([]byte(PasswordBucket.Name))
+			tx.DeleteBucket([]byte(EmailBucket.Name))
+			tx.CreateBucket([]byte(UsersBucket.Name))
+			tx.CreateBucket([]byte(PasswordBucket.Name))
+			tx.CreateBucket([]byte(EmailBucket.Name))
+			vbolt.TxCommit(tx)
+		})
+	})
+
 	defer db.Close()
 
 	mux := &Mux{
