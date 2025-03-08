@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"go.hasen.dev/generic"
 	"go.hasen.dev/vbolt"
 	"go.hasen.dev/vpack"
 	"golang.org/x/crypto/bcrypt"
@@ -50,6 +51,14 @@ func isPasswordValid(pwd string) bool {
 
 var ErrEmailTaken = errors.New("EmailTaken")
 var ErrPasswordInvalid = errors.New("PasswordInvalid")
+
+func GetAllUsers(tx *vbolt.Tx) (users []User) {
+	vbolt.IterateAll(tx, UsersBucket, func(key int, value User) bool {
+		generic.Append(&users, value)
+		return true
+	})
+	return users
+}
 
 func AddUserTx(tx *vbolt.Tx, req AddUserRequest, hash []byte) User {
 	var user User

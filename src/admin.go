@@ -1,6 +1,10 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+
+	"go.hasen.dev/vbolt"
+)
 
 func RegisterAdminPages(mux *http.ServeMux) {
 	mux.Handle("GET /admin", AuthHandler(http.HandlerFunc(adminPage)))
@@ -12,5 +16,9 @@ func adminPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func usersPage(w http.ResponseWriter, r *http.Request) {
-	RenderAdminTemplate(w, r, "users")
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		RenderAdminTemplateWithData(w, r, "users", map[string]interface{}{
+			"Users": GetAllUsers(tx),
+		})
+	})
 }

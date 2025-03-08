@@ -26,12 +26,19 @@
         {{ block "content" . }}Default Content{{ end }}
     </main>
     <footer>
-        <p>&copy; 2024 Family Website</p>
-        {{ if .UserId }}
-            <a href="/profile" style="float: right; font-size: small;">Account {{ .Username }}</a>
-        {{ else }}
-            <a href="/login" style="float: right; font-size: small;">Admin Login</a>
-        {{ end }}
+        <div class="footer-container">
+            <p>&copy; 2024 Family Website</p>
+            <div class="footer-links">
+            {{ if .UserId }}
+                <a href="/profile">Account {{ .Username }}</a>
+                {{ if .isAdmin }}
+                <a href="/admin">Admin Dashboard</a>
+                {{ end }}
+            {{ else }}
+                <a href="/login">Admin Login</a>
+            {{ end }}
+            </div>
+        </div>
     </footer>
     {{ block "css" . }}{{ end }}
     {{ block "js" . }}{{ end }}

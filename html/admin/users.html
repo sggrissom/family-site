@@ -1,5 +1,8 @@
 
 {{ define "content" }}
       <h2>Users page</h2>
-      <p>lets show the registered users</p>
+      {{ range .Users }}
+            <p>{{ .Id }}</p>
+            <p>{{ .Email }}</p>
+      {{ end }}
 {{ end }}
