@@ -9,6 +9,7 @@ import (
 func RegisterAdminPages(mux *http.ServeMux) {
 	mux.Handle("GET /admin", AuthHandler(http.HandlerFunc(adminPage)))
 	mux.Handle("GET /admin/users", AuthHandler(http.HandlerFunc(usersPage)))
+	mux.Handle("GET /admin/families", AuthHandler(http.HandlerFunc(familiesPage)))
 }
 
 func adminPage(w http.ResponseWriter, r *http.Request) {
@@ -21,4 +22,8 @@ func usersPage(w http.ResponseWriter, r *http.Request) {
 			"Users": GetAllUsers(tx),
 		})
 	})
+}
+
+func familiesPage(w http.ResponseWriter, r *http.Request) {
+	RenderAdminTemplate(w, r, "families")
 }
