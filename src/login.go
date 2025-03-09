@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/boltdb/bolt"
 	"github.com/golang-jwt/jwt/v5"
 	"go.hasen.dev/generic"
 	"go.hasen.dev/vbolt"
@@ -106,15 +107,17 @@ func ValidateUserTx(tx *vbolt.Tx, req AddUserRequest) error {
 	return nil
 }
 
-func AddUser(readTx *vbolt.Tx, req AddUserRequest) (err error) {
-	err = ValidateUserTx(readTx, req)
+func AddUser(dbHandle *bolt.DB, req AddUserRequest) (err error) {
+	vbolt.WithReadTx(dbHandle, func(readTx *vbolt.Tx) {
+		err = ValidateUserTx(readTx, req)
+	})
 	if err != nil {
 		return
 	}
 
 	hash, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 
-	vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
+	vbolt.WithWriteTx(dbHandle, func(tx *vbolt.Tx) {
 		AddUserTx(tx, req, hash)
 		vbolt.TxCommit(tx)
 	})
@@ -144,19 +147,17 @@ func profilePage(w http.ResponseWriter, r *http.Request) {
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
-	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-		addUserRequest := AddUserRequest{
-			Email:    r.PostFormValue("email"),
-			Password: r.PostFormValue("password"),
-		}
-		err := AddUser(tx, addUserRequest)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
+	addUserRequest := AddUserRequest{
+		Email:    r.PostFormValue("email"),
+		Password: r.PostFormValue("password"),
+	}
+	err := AddUser(db, addUserRequest)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 
-		http.Redirect(w, r, "/", http.StatusFound)
-	})
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func authenticateLogin(w http.ResponseWriter, r *http.Request) {
