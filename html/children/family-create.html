@@ -1,0 +1,9 @@
+
+{{ define "title" }}create family{{ end }}
+{{ define "content" }}
+    <form method="post" action="/family/create">
+        <label>Family Name: <input type="text" name="name" value="{{ .Family.Name }}"></label>
+        <input type="hidden" name="id" value="{{ .Family.Id }}">
+        <button type="submit">Submit</button>
+    </form>
+{{ end }}

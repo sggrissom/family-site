@@ -34,6 +34,11 @@ func PackFamily(self *Family, buf *vpack.Buffer) {
 
 var FamilyBucket = vbolt.Bucket(&Info, "family", vpack.FInt, PackFamily)
 
+func getFamily(tx *vbolt.Tx, id int) (family Family) {
+	vbolt.Read(tx, FamilyBucket, id, &family)
+	return
+}
+
 func PackPerson(self *Person, buf *vpack.Buffer) {
 	vpack.Version(1, buf)
 	vpack.Int(&self.Id, buf)
@@ -108,6 +113,8 @@ func RegisterChildrenPage(mux *http.ServeMux) {
 	mux.Handle("GET /children/delete/{id}", AuthHandler(http.HandlerFunc(deletePerson)))
 	mux.Handle("POST /children/add", AuthHandler(http.HandlerFunc(savePerson)))
 
+	mux.Handle("GET /family/create", AuthHandler(http.HandlerFunc(createFamilyPage)))
+	mux.Handle("GET /family/edit/{id}", AuthHandler(http.HandlerFunc(editFamilyPage)))
 	mux.Handle("POST /family/create", AuthHandler(http.HandlerFunc(saveFamily)))
 }
 
@@ -169,6 +176,18 @@ func savePerson(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/children", http.StatusFound)
 }
 
+func createFamilyPage(w http.ResponseWriter, r *http.Request) {
+	RenderTemplate(w, "family-create")
+}
+func editFamilyPage(w http.ResponseWriter, r *http.Request) {
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		id := r.PathValue("id")
+		idVal, _ := strconv.Atoi(id)
+		RenderTemplateWithData(w, "family-create", map[string]any{
+			"Family": getFamily(tx, idVal),
+		})
+	})
+}
 func saveFamily(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	name := r.FormValue("name")
