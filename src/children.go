@@ -39,6 +39,14 @@ func getFamily(tx *vbolt.Tx, id int) (family Family) {
 	return
 }
 
+func GetAllFamilies(tx *vbolt.Tx) (families []Family) {
+	vbolt.IterateAll(tx, FamilyBucket, func(key int, value Family) bool {
+		generic.Append(&families, value)
+		return true
+	})
+	return
+}
+
 func PackPerson(self *Person, buf *vpack.Buffer) {
 	vpack.Version(1, buf)
 	vpack.Int(&self.Id, buf)

@@ -25,5 +25,9 @@ func usersPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func familiesPage(w http.ResponseWriter, r *http.Request) {
-	RenderAdminTemplate(w, r, "families")
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		RenderAdminTemplateWithData(w, r, "families", map[string]any{
+			"Families": GetAllFamilies(tx),
+		})
+	})
 }

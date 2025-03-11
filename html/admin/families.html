@@ -1,4 +1,21 @@
 {{ define "content" }}
-      <h2>Families</h2>
-      <p>See and manage families.</p>
+  <h1>Manage Families</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Family ID</th>
+        <th>Name</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Families }}
+      <tr>
+        <td>{{.Id}}</td>
+        <td>{{.Name}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+
 {{ end }}
