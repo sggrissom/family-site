@@ -93,6 +93,45 @@ func preloadTemplates() error {
 	return nil
 }
 
+func RenderNoBaseTemplate(w http.ResponseWriter, templateName string) {
+	RenderNoBaseTemplateWithData(w, templateName, map[string]interface{}{})
+}
+
+func RenderNoBaseTemplateWithData(w http.ResponseWriter, templateName string, data map[string]interface{}) {
+	path, exists := templatePaths[templateName]
+	if !exists {
+		log.Printf("Template not found: %v", templateName)
+		http.Error(w, "Template not found", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl, err := template.New(templateName + ".html").Funcs(funcMap).ParseFiles(path)
+	if err != nil {
+		log.Printf("Template failure: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	username := w.Header().Get("username")
+	if username != "" {
+		data["Username"] = username
+		vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+			var userId int
+			vbolt.Read(tx, EmailBucket, username, &userId)
+			data["UserId"] = userId
+			if userId == 1 {
+				data["isAdmin"] = true
+			}
+		})
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Template execution error: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func RenderTemplate(w http.ResponseWriter, templateName string) {
 	RenderTemplateWithData(w, templateName, map[string]interface{}{})
 }
@@ -131,6 +170,7 @@ func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
 func RenderAdminTemplate(w http.ResponseWriter, r *http.Request, templateName string) {
 	RenderAdminTemplateWithData(w, r, templateName, map[string]interface{}{})
 }
@@ -279,8 +319,10 @@ func main() {
 
 	// HTTPS server
 	mux.family.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		authenticateUser(w, r)
-		RenderTemplate(w, "home")
+		RenderNoBaseTemplate(w, "welcome")
+	})
+	mux.family.HandleFunc("/landing", func(w http.ResponseWriter, r *http.Request) {
+		RenderNoBaseTemplate(w, "landing")
 	})
 
 	useTLS := flag.Bool("tls", false, "Enable TLS (HTTPS)")
