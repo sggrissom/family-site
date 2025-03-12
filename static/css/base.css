@@ -46,25 +46,29 @@ nav a {
 }
 .hero h1 {
   font-size: 2.5em;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 .hero p {
   font-size: 1.2em;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 .cta-button {
   background-color: var(--button-bg);
   color: var(--button-text);
   border: none;
-  padding: 10px 15px;
-  font-size: 1em;
+  padding: 15px 30px;
+  font-size: 1.1em;
   cursor: pointer;
   text-decoration: none;
   border-radius: 5px;
   transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-top: 10px;
 }
 .cta-button:hover {
   background-color: var(--button-hover-bg);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 footer {
   text-align: center;
