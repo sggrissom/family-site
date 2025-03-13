@@ -112,21 +112,21 @@ func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map
 
 var ErrInvalidTemplate = errors.New("InvalidTemplate")
 
-func getTemplatePaths(templateNames []string) (error, []string) {
+func getTemplatePaths(templateNames []string) ([]string, error) {
 
 	paths := make([]string, len(templateNames))
 	for index, templateName := range templateNames {
 		path, exists := templatePaths[templateName]
 		if !exists {
-			return ErrInvalidTemplate, nil
+			return nil, ErrInvalidTemplate
 		}
 		paths[index] = path
 	}
 
-	return nil, paths
+	return paths, nil
 }
 func internalRenderTemplateWithData(w http.ResponseWriter, templateNames []string, data map[string]interface{}) {
-	err, paths := getTemplatePaths(templateNames)
+	paths, err := getTemplatePaths(templateNames)
 	if err != nil {
 		log.Printf("Template failure: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
