@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/base.css">
-    <script src="/static/js/ext/htmx.min.js"></script>
-    <title>{{ block "title" . }}Default Title{{ end }}</title>
-</head>
-<body>
-    <header>
-        <div class="header-container">
-            <h1>Family Website</h1>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/css/base.css">
+        <title>{{ block "title" . }}Default Title{{ end }}</title>
+    </head>
+    <body>
+        <header>
+            <div class="logo">Family Site</div>
             <nav>
                 <a href="/">Home</a>
                 <a href="/children">Children</a>
@@ -19,12 +17,13 @@
                 <a href="/milestones">Milestones</a>
                 <a href="/height">Heights</a>
                 <a href="/weight">Weights</a>
+                <a href="/logout">Log Out</a>
             </nav>
+        </header>
+        <div class="container">
+            {{ block "content" . }}Default Content{{ end }}
         </div>
-    </header>
-    <main class="container">
-        {{ block "content" . }}Default Content{{ end }}
-    </main>
+    </body>
     <footer>
         <div class="footer-container">
             <p>&copy; 2024 Family Website</p>
@@ -42,5 +41,4 @@
     </footer>
     {{ block "css" . }}{{ end }}
     {{ block "js" . }}{{ end }}
-</body>
 </html>
