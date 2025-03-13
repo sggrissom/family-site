@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"html/template"
@@ -98,38 +99,7 @@ func RenderNoBaseTemplate(w http.ResponseWriter, templateName string) {
 }
 
 func RenderNoBaseTemplateWithData(w http.ResponseWriter, templateName string, data map[string]interface{}) {
-	path, exists := templatePaths[templateName]
-	if !exists {
-		log.Printf("Template not found: %v", templateName)
-		http.Error(w, "Template not found", http.StatusInternalServerError)
-		return
-	}
-
-	tmpl, err := template.New(templateName + ".html").Funcs(funcMap).ParseFiles(path)
-	if err != nil {
-		log.Printf("Template failure: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	username := w.Header().Get("username")
-	if username != "" {
-		data["Username"] = username
-		vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-			var userId int
-			vbolt.Read(tx, EmailBucket, username, &userId)
-			data["UserId"] = userId
-			if userId == 1 {
-				data["isAdmin"] = true
-			}
-		})
-	}
-
-	err = tmpl.Execute(w, data)
-	if err != nil {
-		log.Printf("Template execution error: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	internalRenderTemplateWithData(w, []string{templateName}, data)
 }
 
 func RenderTemplate(w http.ResponseWriter, templateName string) {
@@ -137,18 +107,40 @@ func RenderTemplate(w http.ResponseWriter, templateName string) {
 }
 
 func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map[string]interface{}) {
-	path, exists := templatePaths[templateName]
-	if !exists {
-		log.Printf("Template not found: %v", templateName)
-		http.Error(w, "Template not found", http.StatusInternalServerError)
-		return
+	internalRenderTemplateWithData(w, []string{"base", templateName}, data)
+}
+
+var ErrInvalidTemplate = errors.New("InvalidTemplate")
+
+func getTemplatePaths(templateNames []string) (error, []string) {
+
+	paths := make([]string, len(templateNames))
+	for index, templateName := range templateNames {
+		path, exists := templatePaths[templateName]
+		if !exists {
+			return ErrInvalidTemplate, nil
+		}
+		paths[index] = path
 	}
 
-	tmpl, err := template.New("base.html").Funcs(funcMap).ParseFiles("html/common/base.html", path)
+	return nil, paths
+}
+func internalRenderTemplateWithData(w http.ResponseWriter, templateNames []string, data map[string]interface{}) {
+	err, paths := getTemplatePaths(templateNames)
 	if err != nil {
 		log.Printf("Template failure: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	tmpl := template.New(filepath.Base(paths[0])).Funcs(funcMap)
+	for _, path := range paths {
+		tmpl, err = tmpl.ParseFiles(path)
+		if err != nil {
+			log.Printf("Template failure: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	username := w.Header().Get("username")
