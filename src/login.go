@@ -82,6 +82,16 @@ func GetAllUsers(tx *vbolt.Tx) (users []User) {
 	return users
 }
 
+func GetUserId(tx *vbolt.Tx, username string) (userId int) {
+	vbolt.Read(tx, EmailBucket, username, &userId)
+	return userId
+}
+
+func GetUser(tx *vbolt.Tx, userId int) (user User) {
+	vbolt.Read(tx, UsersBucket, userId, &user)
+	return user
+}
+
 func AddUserTx(tx *vbolt.Tx, req AddUserRequest, hash []byte) User {
 	var user User
 	user.Id = vbolt.NextIntId(tx, UsersBucket)

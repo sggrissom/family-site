@@ -95,7 +95,7 @@ func preloadTemplates() error {
 }
 
 func RenderNoBaseTemplate(w http.ResponseWriter, templateName string) {
-	RenderNoBaseTemplateWithData(w, templateName, map[string]interface{}{})
+	RenderNoBaseTemplateWithData(w, templateName, map[string]any{})
 }
 
 func RenderNoBaseTemplateWithData(w http.ResponseWriter, templateName string, data map[string]interface{}) {
@@ -103,7 +103,7 @@ func RenderNoBaseTemplateWithData(w http.ResponseWriter, templateName string, da
 }
 
 func RenderTemplate(w http.ResponseWriter, templateName string) {
-	RenderTemplateWithData(w, templateName, map[string]interface{}{})
+	RenderTemplateWithData(w, templateName, map[string]any{})
 }
 
 func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map[string]interface{}) {
@@ -113,7 +113,6 @@ func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map
 var ErrInvalidTemplate = errors.New("InvalidTemplate")
 
 func getTemplatePaths(templateNames []string) ([]string, error) {
-
 	paths := make([]string, len(templateNames))
 	for index, templateName := range templateNames {
 		path, exists := templatePaths[templateName]
@@ -147,9 +146,7 @@ func internalRenderTemplateWithData(w http.ResponseWriter, templateNames []strin
 	if username != "" {
 		data["Username"] = username
 		vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-			var userId int
-			vbolt.Read(tx, EmailBucket, username, &userId)
-			data["UserId"] = userId
+			userId := GetUserId(tx, username)
 			if userId == 1 {
 				data["isAdmin"] = true
 			}
@@ -191,8 +188,7 @@ func RenderAdminTemplateWithData(w http.ResponseWriter, r *http.Request, templat
 	}
 	data["Username"] = username
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-		var userId int
-		vbolt.Read(tx, EmailBucket, username, &userId)
+		userId := GetUserId(tx, username)
 		data["UserId"] = userId
 		if userId == 1 {
 			data["isAdmin"] = true
@@ -311,10 +307,13 @@ func main() {
 
 	// HTTPS server
 	mux.family.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		RenderNoBaseTemplate(w, "welcome")
-	})
-	mux.family.HandleFunc("/landing", func(w http.ResponseWriter, r *http.Request) {
-		RenderNoBaseTemplate(w, "landing")
+		authenticateUser(w, r)
+		username := w.Header().Get("username")
+		if username == "" {
+			RenderNoBaseTemplate(w, "welcome")
+		} else {
+			RenderTemplate(w, "home")
+		}
 	})
 
 	useTLS := flag.Bool("tls", false, "Enable TLS (HTTPS)")
