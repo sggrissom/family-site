@@ -1,5 +1,111 @@
 {{ define "title" }}it's home{{ end }}
 {{ define "content" }}
-    <h2>Welcome,</h2>
-    <p style="margin-bottom: 40px;">You do have a famaily</p>
+  <div class="container family-dashboard">
+    <h2>Family Dashboard</h2>
+    <p>Welcome, Username! Here’s an overview of your family.</p>
+
+    <div class="info-cards">
+      <div class="info-card">
+        <h3>Members</h3>
+        <p>4</p>
+      </div>
+      <div class="info-card">
+        <h3>People</h3>
+        <p>5</p>
+      </div>
+      <div class="info-card">
+        <h3>Milestones</h3>
+        <p>10</p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a class="cta-button" href="/">Add Person</a>
+      <a class="cta-button" href="/">Add Milestone</a>
+      <a class="cta-button" href="/">Invite Members</a>
+    </div>
+
+    <h3>Recent Milestones</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Date</th>
+          <th>Associated Person(s)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Johnny's First Steps</td>
+          <td>2023-08-10</td>
+          <td>Johnny</td>
+        </tr>
+        <tr>
+          <td>Aunt Lisa's Birthday</td>
+          <td>2024-03-05</td>
+          <td>Lisa</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+{{ end }}
+
+{{ define "css" }}
+  <style>
+    .family-dashboard {
+      max-width: 900px;
+      margin: 40px auto;
+    }
+
+    .family-dashboard h2 {
+      margin-bottom: 10px;
+      font-size: 1.8em;
+      color: var(--primary-color);
+    }
+
+    .family-dashboard p {
+      margin-bottom: 20px;
+      font-size: 1.1em;
+    }
+
+    /* A simple card layout for stats/overview */
+    .info-cards {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+
+    .info-card {
+      background-color: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      flex: 1 1 200px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .info-card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+
+    .info-card p {
+      margin: 0;
+      font-size: 1.4em;
+      font-weight: bold;
+      color: var(--text-color);
+    }
+
+    .actions {
+      margin-bottom: 30px;
+    }
+    .actions .cta-button {
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+  </style>
 {{ end }}
