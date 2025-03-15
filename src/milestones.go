@@ -106,49 +106,49 @@ func QueryMilestones(personId int) (milestones []Milestone) {
 }
 
 func RegisterMilestonesPages(mux *http.ServeMux) {
-	mux.Handle("GET /milestones/{id}", PublicHandler(http.HandlerFunc(milestonesPage)))
-	mux.Handle("GET /milestones/add", AuthHandler(http.HandlerFunc(addMilestonesPage)))
-	mux.Handle("GET /milestones/edit/{id}", AuthHandler(http.HandlerFunc(editMilestonesPage)))
-	mux.Handle("GET /milestones/delete/{id}", AuthHandler(http.HandlerFunc(deleteMilestone)))
-	mux.Handle("POST /milestones/add", AuthHandler(http.HandlerFunc(saveMilestone)))
+	mux.Handle("GET /milestones/{id}", PublicHandler(ContextFunc(milestonesPage)))
+	mux.Handle("GET /milestones/add", AuthHandler(ContextFunc(addMilestonesPage)))
+	mux.Handle("GET /milestones/edit/{id}", AuthHandler(ContextFunc(editMilestonesPage)))
+	mux.Handle("GET /milestones/delete/{id}", AuthHandler(ContextFunc(deleteMilestone)))
+	mux.Handle("POST /milestones/add", AuthHandler(ContextFunc(saveMilestone)))
 }
 
-func milestonesPage(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
+func milestonesPage(context ResponseContext) {
+	id := context.r.PathValue("id")
 	idVal, err := strconv.Atoi(id)
 	if err != nil {
 		idVal = 1
 	}
-	RenderTemplateWithData(w, "milestones", map[string]interface{}{
+	RenderTemplateWithData(context, "milestones", map[string]interface{}{
 		"Milestones": QueryMilestones(idVal),
 	})
 }
 
-func addMilestonesPage(w http.ResponseWriter, r *http.Request) {
+func addMilestonesPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateWithData(w, "milestones-add", map[string]interface{}{
+		RenderTemplateWithData(context, "milestones-add", map[string]interface{}{
 			"People": getAllPeople(tx),
 		})
 	})
 }
 
-func editMilestonesPage(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "milestones-add")
+func editMilestonesPage(context ResponseContext) {
+	RenderTemplate(context, "milestones-add")
 }
 
-func deleteMilestone(w http.ResponseWriter, r *http.Request) {
+func deleteMilestone(context ResponseContext) {
 }
 
-func saveMilestone(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	measureDate := r.FormValue("measureDate")
-	numericValue, _ := strconv.ParseFloat(r.FormValue("numericValue"), 64)
-	personId, _ := strconv.Atoi(r.FormValue("personId"))
-	id, _ := strconv.Atoi(r.FormValue("id"))
-	milestoneType, _ := parseMilestoneType(r.FormValue("milestoneType"))
-	unit := r.FormValue("unit")
-	textValue := r.FormValue("textValue")
-	notes := r.FormValue("notes")
+func saveMilestone(context ResponseContext) {
+	context.r.ParseForm()
+	measureDate := context.r.FormValue("measureDate")
+	numericValue, _ := strconv.ParseFloat(context.r.FormValue("numericValue"), 64)
+	personId, _ := strconv.Atoi(context.r.FormValue("personId"))
+	id, _ := strconv.Atoi(context.r.FormValue("id"))
+	milestoneType, _ := parseMilestoneType(context.r.FormValue("milestoneType"))
+	unit := context.r.FormValue("unit")
+	textValue := context.r.FormValue("textValue")
+	notes := context.r.FormValue("notes")
 
 	measureDateTime, _ := time.Parse("2006-01-02", measureDate)
 
@@ -172,5 +172,5 @@ func saveMilestone(w http.ResponseWriter, r *http.Request) {
 		vbolt.TxCommit(tx)
 	})
 
-	http.Redirect(w, r, "/milestones", http.StatusFound)
+	http.Redirect(context.w, context.r, "/milestones", http.StatusFound)
 }

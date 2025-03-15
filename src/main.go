@@ -20,6 +20,16 @@ const dbFile = "family.db"
 var db *vbolt.DB
 var Info vbolt.Info // define once
 
+type ResponseContext struct {
+	w        http.ResponseWriter
+	r        *http.Request
+	userId   int
+	username string
+	isAdmin  bool
+}
+
+type ContextFunc func(ResponseContext)
+
 var funcMap = template.FuncMap{
 	"formatDate": func(t time.Time) string {
 		if t.IsZero() {
@@ -94,20 +104,20 @@ func preloadTemplates() error {
 	return nil
 }
 
-func RenderNoBaseTemplate(w http.ResponseWriter, templateName string) {
-	RenderNoBaseTemplateWithData(w, templateName, map[string]any{})
+func RenderNoBaseTemplate(context ResponseContext, templateName string) {
+	RenderNoBaseTemplateWithData(context, templateName, map[string]any{})
 }
 
-func RenderNoBaseTemplateWithData(w http.ResponseWriter, templateName string, data map[string]interface{}) {
-	internalRenderTemplateWithData(w, []string{templateName}, data)
+func RenderNoBaseTemplateWithData(context ResponseContext, templateName string, data map[string]interface{}) {
+	internalRenderTemplateWithData(context, []string{templateName}, data)
 }
 
-func RenderTemplate(w http.ResponseWriter, templateName string) {
-	RenderTemplateWithData(w, templateName, map[string]any{})
+func RenderTemplate(context ResponseContext, templateName string) {
+	RenderTemplateWithData(context, templateName, map[string]any{})
 }
 
-func RenderTemplateWithData(w http.ResponseWriter, templateName string, data map[string]interface{}) {
-	internalRenderTemplateWithData(w, []string{"base", templateName}, data)
+func RenderTemplateWithData(context ResponseContext, templateName string, data map[string]interface{}) {
+	internalRenderTemplateWithData(context, []string{"base", templateName}, data)
 }
 
 var ErrInvalidTemplate = errors.New("InvalidTemplate")
@@ -124,11 +134,11 @@ func getTemplatePaths(templateNames []string) ([]string, error) {
 
 	return paths, nil
 }
-func internalRenderTemplateWithData(w http.ResponseWriter, templateNames []string, data map[string]interface{}) {
+func internalRenderTemplateWithData(context ResponseContext, templateNames []string, data map[string]interface{}) {
 	paths, err := getTemplatePaths(templateNames)
 	if err != nil {
 		log.Printf("Template failure: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(context.w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -137,75 +147,68 @@ func internalRenderTemplateWithData(w http.ResponseWriter, templateNames []strin
 		tmpl, err = tmpl.ParseFiles(path)
 		if err != nil {
 			log.Printf("Template failure: %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(context.w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
 
-	username := w.Header().Get("username")
-	if username != "" {
-		data["Username"] = username
-		vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-			userId := GetUserId(tx, username)
-			if userId == 1 {
-				data["isAdmin"] = true
-			}
-		})
+	if context.username != "" {
+		data["Username"] = context.username
+		if context.isAdmin {
+			data["isAdmin"] = true
+		}
 	}
 
-	err = tmpl.Execute(w, data)
+	err = tmpl.Execute(context.w, data)
 	if err != nil {
 		log.Printf("Template execution error: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(context.w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func RenderAdminTemplate(w http.ResponseWriter, r *http.Request, templateName string) {
-	RenderAdminTemplateWithData(w, r, templateName, map[string]interface{}{})
+func RenderAdminTemplate(context ResponseContext, templateName string) {
+	RenderAdminTemplateWithData(context, templateName, map[string]any{})
 }
 
-func RenderAdminTemplateWithData(w http.ResponseWriter, r *http.Request, templateName string, data map[string]interface{}) {
-	authenticateUser(w, r)
-
+func RenderAdminTemplateWithData(context ResponseContext, templateName string, data map[string]interface{}) {
 	path, exists := adminPaths[templateName]
 	if !exists {
 		log.Printf("Template not found: %v", templateName)
-		http.Error(w, "Template not found", http.StatusInternalServerError)
+		http.Error(context.w, "Template not found", http.StatusInternalServerError)
 		return
 	}
 
 	tmpl, err := template.New("admin.html").Funcs(funcMap).ParseFiles("html/admin/admin.html", path)
 	if err != nil {
 		log.Printf("Template failure: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(context.w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	username := w.Header().Get("username")
-	if username == "" {
-		http.Error(w, "auth failure", http.StatusInternalServerError)
+	if context.username == "" {
+		http.Error(context.w, "auth failure", http.StatusInternalServerError)
 		return
 	}
-	data["Username"] = username
-	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-		userId := GetUserId(tx, username)
-		data["UserId"] = userId
-		if userId == 1 {
-			data["isAdmin"] = true
-		} else {
-			http.Error(w, "user not an admin", http.StatusInternalServerError)
-			return
-		}
-	})
+	data["Username"] = context.username
+	data["UserId"] = context.userId
+	if context.isAdmin {
+		data["isAdmin"] = true
+	} else {
+		http.Error(context.w, "user not an admin", http.StatusInternalServerError)
+		return
+	}
 
-	err = tmpl.Execute(w, data)
+	err = tmpl.Execute(context.w, data)
 	if err != nil {
 		log.Printf("Template execution error: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(context.w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func authenticateUser(w http.ResponseWriter, r *http.Request) {
+func BuildResponseContext(w http.ResponseWriter, r *http.Request) (context ResponseContext) {
+	context.w = w
+	context.r = r
+
 	cookie, err := r.Cookie("auth_token")
 	if err != nil {
 		return
@@ -223,35 +226,41 @@ func authenticateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok {
-		w.Header().Add("username", claims.Username)
+		context.username = claims.Username
+		vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+			context.userId = GetUserId(tx, context.username)
+			context.isAdmin = context.userId == 1
+		})
 	}
+
+	return
 }
 
-func RenderTemplateBlock(w http.ResponseWriter, templateName string, blockName string, data interface{}) {
+func RenderTemplateBlock(context ResponseContext, templateName string, blockName string, data interface{}) {
 	var template = template.Must(template.ParseFiles("html/base.html", "html/"+templateName+".html"))
-	err := template.ExecuteTemplate(w, blockName, data)
+	err := template.ExecuteTemplate(context.w, blockName, data)
 	if err != nil {
 		log.Printf("Template execution error: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(context.w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func PublicHandler(next http.Handler) http.Handler {
+func PublicHandler(next ContextFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authenticateUser(w, r)
-		next.ServeHTTP(w, r)
+		context := BuildResponseContext(w, r)
+		next(context)
 	})
 }
 
-func AuthHandler(next http.Handler) http.Handler {
+func AuthHandler(next ContextFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authenticateUser(w, r)
-		username := w.Header().Get("username")
-		if username == "" {
+		context := BuildResponseContext(w, r)
+		if context.username == "" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		next.ServeHTTP(w, r)
+
+		next(context)
 	})
 }
 

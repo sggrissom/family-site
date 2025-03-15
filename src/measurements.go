@@ -189,50 +189,50 @@ func getWeightMilestones(weights []PersonWeight, milestones []float64) (mileston
 }
 
 func RegisterMeasurementsPages(mux *http.ServeMux) {
-	mux.Handle("GET /height", PublicHandler(http.HandlerFunc(mainHeightsPage)))
-	mux.Handle("GET /weight", PublicHandler(http.HandlerFunc(mainWeightsPage)))
-	mux.Handle("GET /height/add", AuthHandler(http.HandlerFunc(addHeightPage)))
-	mux.Handle("POST /height/add", AuthHandler(http.HandlerFunc(saveHeightPage)))
-	mux.Handle("GET /weight/add", AuthHandler(http.HandlerFunc(addWeightPage)))
-	mux.Handle("POST /weight/add", AuthHandler(http.HandlerFunc(saveWeightPage)))
-	mux.Handle("GET /api/height/{id}", PublicHandler(http.HandlerFunc(heightApi)))
-	mux.Handle("GET /api/weight/{id}", PublicHandler(http.HandlerFunc(weightApi)))
+	mux.Handle("GET /height", PublicHandler(ContextFunc(mainHeightsPage)))
+	mux.Handle("GET /weight", PublicHandler(ContextFunc(mainWeightsPage)))
+	mux.Handle("GET /height/add", AuthHandler(ContextFunc(addHeightPage)))
+	mux.Handle("POST /height/add", AuthHandler(ContextFunc(saveHeightPage)))
+	mux.Handle("GET /weight/add", AuthHandler(ContextFunc(addWeightPage)))
+	mux.Handle("POST /weight/add", AuthHandler(ContextFunc(saveWeightPage)))
+	mux.Handle("GET /api/height/{id}", PublicHandler(ContextFunc(heightApi)))
+	mux.Handle("GET /api/weight/{id}", PublicHandler(ContextFunc(weightApi)))
 
-	mux.Handle("GET /height/table/{id}", PublicHandler(http.HandlerFunc(heightTablePage)))
-	mux.Handle("GET /weight/table/{id}", PublicHandler(http.HandlerFunc(weightTablePage)))
-	mux.Handle("GET /api/height/table", PublicHandler(http.HandlerFunc(heightTableApi)))
-	mux.Handle("GET /api/weight/table", PublicHandler(http.HandlerFunc(weightTableApi)))
+	mux.Handle("GET /height/table/{id}", PublicHandler(ContextFunc(heightTablePage)))
+	mux.Handle("GET /weight/table/{id}", PublicHandler(ContextFunc(weightTablePage)))
+	mux.Handle("GET /api/height/table", PublicHandler(ContextFunc(heightTableApi)))
+	mux.Handle("GET /api/weight/table", PublicHandler(ContextFunc(weightTableApi)))
 }
 
-func mainHeightsPage(w http.ResponseWriter, r *http.Request) {
+func mainHeightsPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateWithData(w, "height", map[string]interface{}{
+		RenderTemplateWithData(context, "height", map[string]interface{}{
 			"People": getAllPeople(tx),
 		})
 	})
 }
-func mainWeightsPage(w http.ResponseWriter, r *http.Request) {
+func mainWeightsPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateWithData(w, "weight", map[string]interface{}{
-			"People": getAllPeople(tx),
-		})
-	})
-}
-
-func addHeightPage(w http.ResponseWriter, r *http.Request) {
-	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateWithData(w, "height-add", map[string]interface{}{
+		RenderTemplateWithData(context, "weight", map[string]interface{}{
 			"People": getAllPeople(tx),
 		})
 	})
 }
 
-func saveHeightPage(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	measureDate := r.FormValue("measureDate")
-	inches, _ := strconv.ParseFloat(r.FormValue("inches"), 64)
-	personId, _ := strconv.Atoi(r.FormValue("personId"))
-	id, _ := strconv.Atoi(r.FormValue("id"))
+func addHeightPage(context ResponseContext) {
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		RenderTemplateWithData(context, "height-add", map[string]interface{}{
+			"People": getAllPeople(tx),
+		})
+	})
+}
+
+func saveHeightPage(context ResponseContext) {
+	context.r.ParseForm()
+	measureDate := context.r.FormValue("measureDate")
+	inches, _ := strconv.ParseFloat(context.r.FormValue("inches"), 64)
+	personId, _ := strconv.Atoi(context.r.FormValue("personId"))
+	id, _ := strconv.Atoi(context.r.FormValue("id"))
 
 	measureDateTime, _ := time.Parse("2006-01-02", measureDate)
 
@@ -251,23 +251,23 @@ func saveHeightPage(w http.ResponseWriter, r *http.Request) {
 		vbolt.TxCommit(tx)
 	})
 
-	http.Redirect(w, r, "/height", http.StatusFound)
+	http.Redirect(context.w, context.r, "/height", http.StatusFound)
 }
 
-func addWeightPage(w http.ResponseWriter, r *http.Request) {
+func addWeightPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateWithData(w, "weight-add", map[string]interface{}{
+		RenderTemplateWithData(context, "weight-add", map[string]interface{}{
 			"People": getAllPeople(tx),
 		})
 	})
 }
 
-func saveWeightPage(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	measureDate := r.FormValue("measureDate")
-	pounds, _ := strconv.ParseFloat(r.FormValue("pounds"), 64)
-	personId, _ := strconv.Atoi(r.FormValue("personId"))
-	id, _ := strconv.Atoi(r.FormValue("id"))
+func saveWeightPage(context ResponseContext) {
+	context.r.ParseForm()
+	measureDate := context.r.FormValue("measureDate")
+	pounds, _ := strconv.ParseFloat(context.r.FormValue("pounds"), 64)
+	personId, _ := strconv.Atoi(context.r.FormValue("personId"))
+	id, _ := strconv.Atoi(context.r.FormValue("id"))
 
 	measureDateTime, _ := time.Parse("2006-01-02", measureDate)
 
@@ -286,35 +286,35 @@ func saveWeightPage(w http.ResponseWriter, r *http.Request) {
 		vbolt.TxCommit(tx)
 	})
 
-	http.Redirect(w, r, "/weight", http.StatusFound)
+	http.Redirect(context.w, context.r, "/weight", http.StatusFound)
 }
-func heightApi(w http.ResponseWriter, r *http.Request) {
-	personId, _ := strconv.Atoi(r.PathValue("id"))
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(QueryHeights(personId))
+func heightApi(context ResponseContext) {
+	personId, _ := strconv.Atoi(context.r.PathValue("id"))
+	context.w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(context.w).Encode(QueryHeights(personId))
 }
-func weightApi(w http.ResponseWriter, r *http.Request) {
-	personId, _ := strconv.Atoi(r.PathValue("id"))
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(QueryWeights(personId))
+func weightApi(context ResponseContext) {
+	personId, _ := strconv.Atoi(context.r.PathValue("id"))
+	context.w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(context.w).Encode(QueryWeights(personId))
 }
-func heightTablePage(w http.ResponseWriter, r *http.Request) {
-	personId, _ := strconv.Atoi(r.PathValue("id"))
-	RenderTemplateWithData(w, "height-table", map[string]interface{}{
+func heightTablePage(context ResponseContext) {
+	personId, _ := strconv.Atoi(context.r.PathValue("id"))
+	RenderTemplateWithData(context, "height-table", map[string]interface{}{
 		"Heights": QueryHeights(personId),
 	})
 }
-func weightTablePage(w http.ResponseWriter, r *http.Request) {
-	personId, _ := strconv.Atoi(r.PathValue("id"))
-	RenderTemplateWithData(w, "weight-table", map[string]interface{}{
+func weightTablePage(context ResponseContext) {
+	personId, _ := strconv.Atoi(context.r.PathValue("id"))
+	RenderTemplateWithData(context, "weight-table", map[string]interface{}{
 		"Weights": QueryWeights(personId),
 	})
 }
-func heightTableApi(w http.ResponseWriter, r *http.Request) {
+func heightTableApi(context ResponseContext) {
 	milestones := []float64{0, 1.0 / 12, 2.0 / 12, 3.0 / 12,
 		4.0 / 12, 5.0 / 12, 6.0 / 12, 7.0 / 12, 8.0 / 12,
 		9.0 / 12, 10.0 / 12, 11.0 / 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}
-	personIDs := r.URL.Query()["ids"]
+	personIDs := context.r.URL.Query()["ids"]
 	var response MilestoneResponse
 
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
@@ -354,18 +354,18 @@ func heightTableApi(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(response)
+	context.w.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(context.w).Encode(response)
 	if err != nil {
 		log.Printf("Error encoding response: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(context.w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
-func weightTableApi(w http.ResponseWriter, r *http.Request) {
+func weightTableApi(context ResponseContext) {
 	milestones := []float64{0, 1.0 / 12, 2.0 / 12, 3.0 / 12,
 		4.0 / 12, 5.0 / 12, 6.0 / 12, 7.0 / 12, 8.0 / 12,
 		9.0 / 12, 10.0 / 12, 11.0 / 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}
-	personIDs := r.URL.Query()["ids"]
+	personIDs := context.r.URL.Query()["ids"]
 	var response MilestoneResponse
 
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
@@ -405,10 +405,10 @@ func weightTableApi(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(response)
+	context.w.Header().Set("Content-Type", "application/json")
+	err := json.NewEncoder(context.w).Encode(response)
 	if err != nil {
 		log.Printf("Error encoding response: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		http.Error(context.w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }

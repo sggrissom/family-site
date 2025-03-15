@@ -7,26 +7,26 @@ import (
 )
 
 func RegisterAdminPages(mux *http.ServeMux) {
-	mux.Handle("GET /admin", AuthHandler(http.HandlerFunc(adminPage)))
-	mux.Handle("GET /admin/users", AuthHandler(http.HandlerFunc(usersPage)))
-	mux.Handle("GET /admin/families", AuthHandler(http.HandlerFunc(familiesPage)))
+	mux.Handle("GET /admin", AuthHandler(ContextFunc(adminPage)))
+	mux.Handle("GET /admin/users", AuthHandler(ContextFunc(usersPage)))
+	mux.Handle("GET /admin/families", AuthHandler(ContextFunc(familiesPage)))
 }
 
-func adminPage(w http.ResponseWriter, r *http.Request) {
-	RenderAdminTemplate(w, r, "home")
+func adminPage(context ResponseContext) {
+	RenderAdminTemplate(context, "home")
 }
 
-func usersPage(w http.ResponseWriter, r *http.Request) {
+func usersPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-		RenderAdminTemplateWithData(w, r, "users", map[string]any{
+		RenderAdminTemplateWithData(context, "users", map[string]any{
 			"Users": GetAllUsers(tx),
 		})
 	})
 }
 
-func familiesPage(w http.ResponseWriter, r *http.Request) {
+func familiesPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-		RenderAdminTemplateWithData(w, r, "families", map[string]any{
+		RenderAdminTemplateWithData(context, "families", map[string]any{
 			"Families": GetAllFamilies(tx),
 		})
 	})

@@ -135,52 +135,51 @@ func AddUser(dbHandle *bolt.DB, req AddUserRequest) (err error) {
 }
 
 func RegisterLoginPages(mux *http.ServeMux) {
-	mux.HandleFunc("GET /login", loginPage)
-	mux.HandleFunc("GET /logout", logout)
-	mux.HandleFunc("POST /login", authenticateLogin)
-	mux.HandleFunc("GET /register", registerPage)
-	mux.HandleFunc("POST /register", createUser)
-	mux.Handle("GET /profile", AuthHandler(http.HandlerFunc(profilePage)))
+	mux.Handle("GET /login", PublicHandler(ContextFunc(loginPage)))
+	mux.Handle("GET /logout", PublicHandler(ContextFunc(logout)))
+	mux.Handle("POST /login", PublicHandler(ContextFunc(authenticateLogin)))
+	mux.Handle("GET /register", PublicHandler(ContextFunc(registerPage)))
+	mux.Handle("POST /register", PublicHandler(ContextFunc(createUser)))
+	mux.Handle("GET /profile", AuthHandler(ContextFunc(profilePage)))
 }
 
-func loginPage(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "login")
+func loginPage(context ResponseContext) {
+	RenderTemplate(context, "login")
 }
 
-func registerPage(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "register")
+func registerPage(context ResponseContext) {
+	RenderTemplate(context, "register")
 }
 
-func profilePage(w http.ResponseWriter, r *http.Request) {
-	authenticateUser(w, r)
-	RenderTemplate(w, "profile")
+func profilePage(context ResponseContext) {
+	RenderTemplate(context, "profile")
 }
 
-func createUser(w http.ResponseWriter, r *http.Request) {
+func createUser(context ResponseContext) {
 	addUserRequest := AddUserRequest{
-		Email:    r.PostFormValue("email"),
-		Password: r.PostFormValue("password"),
+		Email:    context.r.PostFormValue("email"),
+		Password: context.r.PostFormValue("password"),
 	}
 	err := AddUser(db, addUserRequest)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(context.w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(context.w, context.r, "/", http.StatusFound)
 }
 
-func authenticateLogin(w http.ResponseWriter, r *http.Request) {
+func authenticateLogin(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
 		var userId int
 		var user User
 		var passHash []byte
-		email := r.FormValue("email")
+		email := context.r.FormValue("email")
 		vbolt.Read(tx, EmailBucket, email, &userId)
 		vbolt.Read(tx, UsersBucket, userId, &user)
 		vbolt.Read(tx, PasswordBucket, userId, &passHash)
 
-		err := bcrypt.CompareHashAndPassword(passHash, []byte(r.FormValue("password")))
+		err := bcrypt.CompareHashAndPassword(passHash, []byte(context.r.FormValue("password")))
 
 		if err == nil {
 			expirationTime := time.Now().Add(24 * time.Hour)
@@ -194,27 +193,27 @@ func authenticateLogin(w http.ResponseWriter, r *http.Request) {
 
 			tokenString, err := token.SignedString(jwtKey)
 			if err != nil {
-				http.Error(w, "Error generating token", http.StatusInternalServerError)
+				http.Error(context.w, "Error generating token", http.StatusInternalServerError)
 				return
 			}
 
-			http.SetCookie(w, &http.Cookie{
+			http.SetCookie(context.w, &http.Cookie{
 				Name:     "auth_token",
 				Value:    tokenString,
 				Path:     "/",
 				HttpOnly: true,
 			})
 
-			http.Redirect(w, r, "/", http.StatusFound)
+			http.Redirect(context.w, context.r, "/", http.StatusFound)
 			return
 		}
 	})
 
-	http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+	http.Error(context.w, "Invalid credentials", http.StatusUnauthorized)
 }
 
-func logout(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
+func logout(context ResponseContext) {
+	http.SetCookie(context.w, &http.Cookie{
 		Name:     "auth_token",
 		Value:    "",
 		Path:     "/",
@@ -222,5 +221,5 @@ func logout(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Unix(0, 0),
 	})
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(context.w, context.r, "/", http.StatusFound)
 }

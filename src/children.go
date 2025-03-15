@@ -114,57 +114,57 @@ func CalculateAge(birthday time.Time, includeMonths bool) string {
 }
 
 func RegisterChildrenPage(mux *http.ServeMux) {
-	mux.Handle("/children", PublicHandler(http.HandlerFunc(peoplePage)))
-	mux.Handle("/children/admin", AuthHandler(http.HandlerFunc(personAdminPage)))
-	mux.Handle("GET /children/add", AuthHandler(http.HandlerFunc(addPersonPage)))
-	mux.Handle("GET /children/add/{id}", PublicHandler(http.HandlerFunc(editPersonPage)))
-	mux.Handle("GET /children/delete/{id}", AuthHandler(http.HandlerFunc(deletePerson)))
-	mux.Handle("POST /children/add", AuthHandler(http.HandlerFunc(savePerson)))
+	mux.Handle("/children", PublicHandler(ContextFunc(peoplePage)))
+	mux.Handle("/children/admin", AuthHandler(ContextFunc(personAdminPage)))
+	mux.Handle("GET /children/add", AuthHandler(ContextFunc(addPersonPage)))
+	mux.Handle("GET /children/add/{id}", PublicHandler(ContextFunc(editPersonPage)))
+	mux.Handle("GET /children/delete/{id}", AuthHandler(ContextFunc(deletePerson)))
+	mux.Handle("POST /children/add", AuthHandler(ContextFunc(savePerson)))
 
-	mux.Handle("GET /family/create", AuthHandler(http.HandlerFunc(createFamilyPage)))
-	mux.Handle("GET /family/edit/{id}", AuthHandler(http.HandlerFunc(editFamilyPage)))
-	mux.Handle("POST /family/create", AuthHandler(http.HandlerFunc(saveFamily)))
+	mux.Handle("GET /family/create", AuthHandler(ContextFunc(createFamilyPage)))
+	mux.Handle("GET /family/edit/{id}", AuthHandler(ContextFunc(editFamilyPage)))
+	mux.Handle("POST /family/create", AuthHandler(ContextFunc(saveFamily)))
 }
 
-func peoplePage(w http.ResponseWriter, r *http.Request) {
+func peoplePage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateWithData(w, "children", map[string]interface{}{
+		RenderTemplateWithData(context, "children", map[string]interface{}{
 			"People": getAllPeople(tx),
 		})
 	})
 }
-func personAdminPage(w http.ResponseWriter, r *http.Request) {
+func personAdminPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateBlock(w, "children", "childrenAdmin", getAllPeople(tx))
+		RenderTemplateBlock(context, "children", "childrenAdmin", getAllPeople(tx))
 	})
 }
-func addPersonPage(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "children-add")
+func addPersonPage(context ResponseContext) {
+	RenderTemplate(context, "children-add")
 }
-func editPersonPage(w http.ResponseWriter, r *http.Request) {
+func editPersonPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		id := r.PathValue("id")
+		id := context.r.PathValue("id")
 		idVal, _ := strconv.Atoi(id)
-		RenderTemplateWithData(w, "children-add", map[string]interface{}{
+		RenderTemplateWithData(context, "children-add", map[string]interface{}{
 			"Person": getPerson(tx, idVal),
 		})
 	})
 }
-func deletePerson(w http.ResponseWriter, r *http.Request) {
+func deletePerson(context ResponseContext) {
 	vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
-		id := r.PathValue("id")
+		id := context.r.PathValue("id")
 		idVal, _ := strconv.Atoi(id)
 		vbolt.Delete(tx, PersonBucket, idVal)
 		vbolt.TxCommit(tx)
 	})
 
-	http.Redirect(w, r, "/children", http.StatusFound)
+	http.Redirect(context.w, context.r, "/children", http.StatusFound)
 }
-func savePerson(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	birthdate := r.FormValue("birthdate")
-	name := r.FormValue("name")
-	id, _ := strconv.Atoi(r.FormValue("id"))
+func savePerson(context ResponseContext) {
+	context.r.ParseForm()
+	birthdate := context.r.FormValue("birthdate")
+	name := context.r.FormValue("name")
+	id, _ := strconv.Atoi(context.r.FormValue("id"))
 
 	birthDateTime, _ := time.Parse("2006-01-02", birthdate)
 
@@ -181,25 +181,25 @@ func savePerson(w http.ResponseWriter, r *http.Request) {
 		vbolt.TxCommit(tx)
 	})
 
-	http.Redirect(w, r, "/children", http.StatusFound)
+	http.Redirect(context.w, context.r, "/children", http.StatusFound)
 }
 
-func createFamilyPage(w http.ResponseWriter, r *http.Request) {
-	RenderTemplate(w, "family-create")
+func createFamilyPage(context ResponseContext) {
+	RenderTemplate(context, "family-create")
 }
-func editFamilyPage(w http.ResponseWriter, r *http.Request) {
+func editFamilyPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		id := r.PathValue("id")
+		id := context.r.PathValue("id")
 		idVal, _ := strconv.Atoi(id)
-		RenderTemplateWithData(w, "family-create", map[string]any{
+		RenderTemplateWithData(context, "family-create", map[string]any{
 			"Family": getFamily(tx, idVal),
 		})
 	})
 }
-func saveFamily(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	name := r.FormValue("name")
-	id, _ := strconv.Atoi(r.FormValue("id"))
+func saveFamily(context ResponseContext) {
+	context.r.ParseForm()
+	name := context.r.FormValue("name")
+	id, _ := strconv.Atoi(context.r.FormValue("id"))
 
 	entry := Family{
 		Name:        name,
@@ -214,5 +214,5 @@ func saveFamily(w http.ResponseWriter, r *http.Request) {
 		vbolt.TxCommit(tx)
 	})
 
-	http.Redirect(w, r, "/children", http.StatusFound)
+	http.Redirect(context.w, context.r, "/children", http.StatusFound)
 }
