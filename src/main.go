@@ -295,6 +295,7 @@ func main() {
 	RegisterLoginPages(mux.family)
 	RegisterMilestonesPages(mux.family)
 	RegisterAdminPages(mux.family)
+	RegisterDashboardPages(mux.family)
 
 	// HTTP to HTTPS redirect handler
 	go func() {
@@ -304,17 +305,6 @@ func main() {
 			http.Redirect(w, r, targetURL, http.StatusMovedPermanently)
 		})))
 	}()
-
-	// HTTPS server
-	mux.family.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		authenticateUser(w, r)
-		username := w.Header().Get("username")
-		if username == "" {
-			RenderNoBaseTemplate(w, "welcome")
-		} else {
-			RenderTemplate(w, "home")
-		}
-	})
 
 	useTLS := flag.Bool("tls", false, "Enable TLS (HTTPS)")
 	flag.Parse()
