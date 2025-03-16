@@ -1,0 +1,23 @@
+{{ define "title" }}family list{{ end }}
+{{ define "content" }}
+  <div class="container family-dashboard">
+    <h2>Families</h2>
+    <p>Welcome {{ .Username }}! Here’s your families.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Family ID</th>
+          <th>Name</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Families }}
+        <tr>
+          <td>{{.Id}}</td>
+          <td>{{.Name}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+{{ end }}
