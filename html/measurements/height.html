@@ -1,6 +1,7 @@
 {{ define "title"}}height{{ end }}
 {{ define "content"}}
     <h1>Height Comparison by Age</h1>
+    <button id="resetZoom">Reset Zoom</button>
     <canvas id="heightChart" width="400" height="200"></canvas>
 
     <div>
@@ -74,6 +75,10 @@
         MeasurementTable.removePerson(personId)
         MeasurementTable.updateTable()
     }
+
+    document.getElementById('resetZoom').addEventListener('click', () => {
+        LineChart.resetZoom();
+    });
   </script>
 {{ end }}
 
