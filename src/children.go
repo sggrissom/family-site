@@ -47,6 +47,25 @@ func GetAllFamilies(tx *vbolt.Tx) (families []Family) {
 	return
 }
 
+func GetFamiliesForUser(tx *vbolt.Tx, userId int) (families []Family) {
+	var familyIds []int
+	vbolt.ReadTermTargets(tx, FamilyIndex, userId, &familyIds, vbolt.Window{})
+	vbolt.ReadSlice(tx, FamilyBucket, familyIds, &families)
+	return
+}
+
+// FamilyIndex term: family id, target: owning user ids
+var FamilyIndex = vbolt.Index(&Info, "family_by", vpack.FInt, vpack.FInt)
+
+func updateFamilyIndex(tx *vbolt.Tx, entry Family) {
+	vbolt.SetTargetTermsPlain(
+		tx,
+		FamilyIndex,
+		entry.Id,
+		entry.OwningUsers,
+	)
+}
+
 func PackPerson(self *Person, buf *vpack.Buffer) {
 	vpack.Version(1, buf)
 	vpack.Int(&self.Id, buf)
@@ -204,13 +223,14 @@ func saveFamily(context ResponseContext) {
 	entry := Family{
 		Name:        name,
 		Id:          id,
-		OwningUsers: []int{},
+		OwningUsers: []int{context.userId},
 	}
 	vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
 		if entry.Id == 0 {
 			entry.Id = vbolt.NextIntId(tx, FamilyBucket)
 		}
 		vbolt.Write(tx, FamilyBucket, entry.Id, &entry)
+		updateFamilyIndex(tx, entry)
 		vbolt.TxCommit(tx)
 	})
 

@@ -16,7 +16,7 @@ func rootPage(context ResponseContext) {
 	}
 
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-		families := GetAllFamilies(tx)
+		families := GetFamiliesForUser(tx, context.userId)
 
 		if len(families) > 0 {
 			RenderTemplate(context, "dashboard")
