@@ -12,26 +12,25 @@ func RegisterDashboardPages(mux *http.ServeMux) {
 }
 
 func rootPage(context ResponseContext) {
-	if context.username == "" {
+	if context.user.Id == 0 {
 		RenderNoBaseTemplate(context, "welcome")
 	}
 
-	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-		families := GetFamiliesForUser(tx, context.userId)
-
-		if len(families) > 0 {
+	if context.user.PrimaryFamilyId > 0 {
+		vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+			family := getFamily(tx, context.user.PrimaryFamilyId)
 			RenderTemplateWithData(context, "dashboard", map[string]any{
-				"Family": families[0],
+				"Family": family,
 			})
-		} else {
-			RenderTemplate(context, "landing")
-		}
-	})
+		})
+	} else {
+		familiesPage(context)
+	}
 }
 
 func familiesPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-		families := GetFamiliesForUser(tx, context.userId)
+		families := GetFamiliesForUser(tx, context.user.Id)
 
 		if len(families) > 0 {
 			RenderTemplateWithData(context, "families", map[string]any{

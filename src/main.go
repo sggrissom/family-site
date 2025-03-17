@@ -21,11 +21,10 @@ var db *vbolt.DB
 var Info vbolt.Info // define once
 
 type ResponseContext struct {
-	w        http.ResponseWriter
-	r        *http.Request
-	userId   int
-	username string
-	isAdmin  bool
+	w       http.ResponseWriter
+	r       *http.Request
+	user    User
+	isAdmin bool
 }
 
 type ContextFunc func(ResponseContext)
@@ -152,9 +151,9 @@ func internalRenderTemplateWithData(context ResponseContext, templateNames []str
 		}
 	}
 
-	if context.username != "" {
-		data["Username"] = context.username
-		data["UserId"] = context.userId
+	if context.user.Id != 0 {
+		data["Username"] = context.user.Email
+		data["UserId"] = context.user.Id
 		if context.isAdmin {
 			data["isAdmin"] = true
 		}
@@ -186,12 +185,12 @@ func RenderAdminTemplateWithData(context ResponseContext, templateName string, d
 		return
 	}
 
-	if context.username == "" {
+	if context.user.Id == 0 {
 		http.Error(context.w, "auth failure", http.StatusInternalServerError)
 		return
 	}
-	data["Username"] = context.username
-	data["UserId"] = context.userId
+	data["Username"] = context.user.Email
+	data["UserId"] = context.user.Id
 	if context.isAdmin {
 		data["isAdmin"] = true
 	} else {
@@ -209,6 +208,7 @@ func RenderAdminTemplateWithData(context ResponseContext, templateName string, d
 func BuildResponseContext(w http.ResponseWriter, r *http.Request) (context ResponseContext) {
 	context.w = w
 	context.r = r
+	context.user.Id = 0
 
 	cookie, err := r.Cookie("auth_token")
 	if err != nil {
@@ -227,10 +227,9 @@ func BuildResponseContext(w http.ResponseWriter, r *http.Request) (context Respo
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok {
-		context.username = claims.Username
 		vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-			context.userId = GetUserId(tx, context.username)
-			context.isAdmin = context.userId == 1
+			context.user = GetUser(tx, GetUserId(tx, claims.Username))
+			context.isAdmin = context.user.Id == 1
 		})
 	}
 
@@ -256,7 +255,7 @@ func PublicHandler(next ContextFunc) http.Handler {
 func AuthHandler(next ContextFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		context := BuildResponseContext(w, r)
-		if context.username == "" {
+		if context.user.Id == 0 {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

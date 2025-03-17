@@ -223,14 +223,24 @@ func saveFamily(context ResponseContext) {
 	entry := Family{
 		Name:        name,
 		Id:          id,
-		OwningUsers: []int{context.userId},
+		OwningUsers: []int{context.user.Id},
 	}
+
+	var user User
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		user = GetUser(tx, context.user.Id)
+	})
+
 	vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
 		if entry.Id == 0 {
 			entry.Id = vbolt.NextIntId(tx, FamilyBucket)
 		}
 		vbolt.Write(tx, FamilyBucket, entry.Id, &entry)
 		updateFamilyIndex(tx, entry)
+		if user.PrimaryFamilyId != 0 {
+			user.PrimaryFamilyId = entry.Id
+			vbolt.Write(tx, UsersBucket, context.user.Id, &user)
+		}
 		vbolt.TxCommit(tx)
 	})
 
