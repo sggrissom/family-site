@@ -12,6 +12,21 @@ import (
 	"go.hasen.dev/vpack"
 )
 
+type GenderType int
+
+const (
+	Male GenderType = iota
+	Female
+	Undisclosed
+)
+
+type PersonType int
+
+const (
+	Parent PersonType = iota
+	Child
+)
+
 type Family struct {
 	Id          int
 	Name        string
@@ -19,10 +34,13 @@ type Family struct {
 }
 
 type Person struct {
-	Id          int
-	Name        string
-	BirthdayRaw time.Time
-	Age         string
+	Id       int
+	FamilyId int
+	Type     PersonType
+	Gender   GenderType
+	Name     string
+	Birthday time.Time
+	Age      string
 }
 
 func PackFamily(self *Family, buf *vpack.Buffer) {
@@ -70,7 +88,8 @@ func PackPerson(self *Person, buf *vpack.Buffer) {
 	vpack.Version(1, buf)
 	vpack.Int(&self.Id, buf)
 	vpack.String(&self.Name, buf)
-	vpack.Time(&self.BirthdayRaw, buf)
+	vpack.Time(&self.Birthday, buf)
+	vpack.Int(&self.FamilyId, buf)
 }
 
 var PersonBucket = vbolt.Bucket(&Info, "people", vpack.FInt, PackPerson)
@@ -104,7 +123,7 @@ func getPerson(tx *vbolt.Tx, id int) (person Person) {
 }
 
 func prepPerson(person *Person) {
-	person.Age = CalculateAge(person.BirthdayRaw, true)
+	person.Age = CalculateAge(person.Birthday, true)
 }
 
 func CalculateAge(birthday time.Time, includeMonths bool) string {
@@ -188,9 +207,9 @@ func savePerson(context ResponseContext) {
 	birthDateTime, _ := time.Parse("2006-01-02", birthdate)
 
 	entry := Person{
-		BirthdayRaw: birthDateTime,
-		Name:        name,
-		Id:          id,
+		Birthday: birthDateTime,
+		Name:     name,
+		Id:       id,
 	}
 	vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
 		if entry.Id == 0 {

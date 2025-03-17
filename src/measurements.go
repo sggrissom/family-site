@@ -99,7 +99,7 @@ func QueryHeights(personId int) (heights []PersonHeight) {
 		vbolt.ReadSlice(tx, PersonHeightBucket, heightIds, &heights)
 		for i := range heights {
 			heights[i].DateString = heights[i].Date.Format("January 02, 2006")
-			heights[i].Age = heights[i].Date.Sub(people[heights[i].PersonId].BirthdayRaw).Hours() / (365.25 * 24) // Age in years
+			heights[i].Age = heights[i].Date.Sub(people[heights[i].PersonId].Birthday).Hours() / (365.25 * 24) // Age in years
 			heights[i].PersonName = people[heights[i].PersonId].Name
 		}
 	})
@@ -116,7 +116,7 @@ func QueryWeights(personId int) (weights []PersonWeight) {
 		vbolt.ReadSlice(tx, PersonWeightsBucket, weightIds, &weights)
 		for i := range weights {
 			weights[i].DateString = weights[i].Date.Format("January 02, 2006")
-			weights[i].Age = weights[i].Date.Sub(people[weights[i].PersonId].BirthdayRaw).Hours() / (365.25 * 24) // Age in years
+			weights[i].Age = weights[i].Date.Sub(people[weights[i].PersonId].Birthday).Hours() / (365.25 * 24) // Age in years
 			weights[i].PersonName = people[weights[i].PersonId].Name
 		}
 	})
