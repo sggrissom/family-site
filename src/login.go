@@ -33,11 +33,14 @@ const (
 )
 
 type User struct {
-	Id        int
-	Email     string
-	Role      RoleType
-	Status    StatusType
-	LastLogin time.Time
+	Id              int
+	Email           string
+	Role            RoleType
+	Status          StatusType
+	LastLogin       time.Time
+	FirstName       string
+	LastName        string
+	PrimaryFamilyId int
 }
 
 func PackUser(self *User, buf *vpack.Buffer) {
@@ -47,6 +50,9 @@ func PackUser(self *User, buf *vpack.Buffer) {
 	vpack.IntEnum(&self.Role, buf)
 	vpack.IntEnum(&self.Status, buf)
 	vpack.Time(&self.LastLogin, buf)
+	vpack.String(&self.FirstName, buf)
+	vpack.String(&self.LastName, buf)
+	vpack.Int(&self.PrimaryFamilyId, buf)
 }
 
 // Buckets
@@ -59,8 +65,10 @@ var PasswordBucket = vbolt.Bucket(&Info, "password", vpack.FInt, vpack.ByteSlice
 var EmailBucket = vbolt.Bucket(&Info, "email", vpack.StringZ, vpack.Int)
 
 type AddUserRequest struct {
-	Email    string
-	Password string
+	Email     string
+	Password  string
+	FirstName string
+	LastName  string
 }
 type Claims struct {
 	Username string `json:"username"`
@@ -98,6 +106,8 @@ func AddUserTx(tx *vbolt.Tx, req AddUserRequest, hash []byte) User {
 	user.Email = req.Email
 	user.Status = Active
 	user.Role = Viewer
+	user.FirstName = req.FirstName
+	user.LastName = req.LastName
 
 	vbolt.Write(tx, UsersBucket, user.Id, &user)
 	vbolt.Write(tx, PasswordBucket, user.Id, &hash)
@@ -157,8 +167,10 @@ func profilePage(context ResponseContext) {
 
 func createUser(context ResponseContext) {
 	addUserRequest := AddUserRequest{
-		Email:    context.r.PostFormValue("email"),
-		Password: context.r.PostFormValue("password"),
+		Email:     context.r.PostFormValue("email"),
+		Password:  context.r.PostFormValue("password"),
+		FirstName: context.r.PostFormValue("firstname"),
+		LastName:  context.r.PostFormValue("lastname"),
 	}
 	err := AddUser(db, addUserRequest)
 	if err != nil {
@@ -202,6 +214,12 @@ func authenticateLogin(context ResponseContext) {
 				Value:    tokenString,
 				Path:     "/",
 				HttpOnly: true,
+			})
+
+			vbolt.WithWriteTx(db, func(writeTx *vbolt.Tx) {
+				user.LastLogin = time.Now()
+				vbolt.Write(writeTx, UsersBucket, userId, &user)
+				vbolt.TxCommit(writeTx)
 			})
 
 			http.Redirect(context.w, context.r, "/", http.StatusFound)
