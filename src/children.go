@@ -43,6 +43,28 @@ type Person struct {
 	Age      string
 }
 
+func parsePersonType(s string) (PersonType, error) {
+	switch s {
+	case "parent":
+		return Parent, nil
+	case "child":
+		return Child, nil
+	default:
+		return 0, fmt.Errorf("unknown type: %s", s)
+	}
+}
+
+func parseGenderType(s string) (GenderType, error) {
+	switch s {
+	case "male":
+		return Male, nil
+	case "female":
+		return Female, nil
+	default:
+		return 0, fmt.Errorf("unknown type: %s", s)
+	}
+}
+
 func PackFamily(self *Family, buf *vpack.Buffer) {
 	vpack.Version(1, buf)
 	vpack.Int(&self.Id, buf)
@@ -90,6 +112,8 @@ func PackPerson(self *Person, buf *vpack.Buffer) {
 	vpack.String(&self.Name, buf)
 	vpack.Time(&self.Birthday, buf)
 	vpack.Int(&self.FamilyId, buf)
+	vpack.IntEnum(&self.Type, buf)
+	vpack.IntEnum(&self.Gender, buf)
 }
 
 var PersonBucket = vbolt.Bucket(&Info, "people", vpack.FInt, PackPerson)
@@ -101,6 +125,28 @@ func getAllPeople(tx *vbolt.Tx) (people []Person) {
 		return true
 	})
 	return people
+}
+
+func getPeopleInFamily(tx *vbolt.Tx, familyId int) (people []Person) {
+	var personIds []int
+	vbolt.ReadTermTargets(tx, PersonIndex, familyId, &personIds, vbolt.Window{})
+	vbolt.ReadSlice(tx, PersonBucket, personIds, &people)
+	for i := range people {
+		prepPerson(&people[i])
+	}
+	return
+}
+
+// PersonIndex term: Person id, target: family id
+var PersonIndex = vbolt.Index(&Info, "person_by", vpack.FInt, vpack.FInt)
+
+func updatePersonIndex(tx *vbolt.Tx, entry Person) {
+	vbolt.SetTargetTermsPlain(
+		tx,
+		PersonIndex,
+		entry.Id,
+		[]int{entry.FamilyId},
+	)
 }
 
 func getAllPeopleMap(tx *vbolt.Tx) (peopleMap map[int]Person) {
@@ -166,7 +212,7 @@ func RegisterChildrenPage(mux *http.ServeMux) {
 
 func peoplePage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateWithData(context, "children", map[string]interface{}{
+		RenderTemplateWithData(context, "children", map[string]any{
 			"People": getAllPeople(tx),
 		})
 	})
@@ -183,7 +229,7 @@ func editPersonPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		id := context.r.PathValue("id")
 		idVal, _ := strconv.Atoi(id)
-		RenderTemplateWithData(context, "children-add", map[string]interface{}{
+		RenderTemplateWithData(context, "children-add", map[string]any{
 			"Person": getPerson(tx, idVal),
 		})
 	})
@@ -203,6 +249,8 @@ func savePerson(context ResponseContext) {
 	birthdate := context.r.FormValue("birthdate")
 	name := context.r.FormValue("name")
 	id, _ := strconv.Atoi(context.r.FormValue("id"))
+	personType, _ := parsePersonType(context.r.FormValue("personType"))
+	gender, _ := parseGenderType(context.r.FormValue("gender"))
 
 	birthDateTime, _ := time.Parse("2006-01-02", birthdate)
 
@@ -210,12 +258,16 @@ func savePerson(context ResponseContext) {
 		Birthday: birthDateTime,
 		Name:     name,
 		Id:       id,
+		FamilyId: context.user.PrimaryFamilyId,
+		Gender:   gender,
+		Type:     personType,
 	}
 	vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
 		if entry.Id == 0 {
 			entry.Id = vbolt.NextIntId(tx, PersonBucket)
 		}
 		vbolt.Write(tx, PersonBucket, entry.Id, &entry)
+		updatePersonIndex(tx, entry)
 		vbolt.TxCommit(tx)
 	})
 

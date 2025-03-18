@@ -71,6 +71,23 @@ var funcMap = template.FuncMap{
 	"formatMilestoneType": func(milestoneType MilestoneType) string {
 		return parseMilestoneTypeLabel(milestoneType)
 	},
+	"displayType": func(person Person) string {
+		switch person.Gender {
+		case Male:
+			if person.Type == Parent {
+				return "Father"
+			} else {
+				return "Son"
+			}
+		case Female:
+			if person.Type == Parent {
+				return "Mother"
+			} else {
+				return "Daughter"
+			}
+		}
+		return ""
+	},
 }
 
 var templatePaths map[string]string

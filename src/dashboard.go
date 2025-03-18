@@ -19,8 +19,10 @@ func rootPage(context ResponseContext) {
 	if context.user.PrimaryFamilyId > 0 {
 		vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
 			family := getFamily(tx, context.user.PrimaryFamilyId)
+			people := getPeopleInFamily(tx, family.Id)
 			RenderTemplateWithData(context, "dashboard", map[string]any{
 				"Family": family,
+				"People": people,
 			})
 		})
 	} else {

@@ -1,9 +1,33 @@
 {{ define "title" }}add person{{ end }}
 {{ define "content" }}
     <form method="post" action="/children/add">
-        <label>Birthday: <input type="date" name="birthdate" value="{{if .Person }}{{ .Person.Birthday | formatDateForInput }}{{end}}"></label>
-        <label>Name: <input type="text" name="name" value="{{ .Person.Name }}"></label>
+        <div class="form-group">
+            <label for="personType">Person Type:</label>
+            <select id="personType" name="personType">
+                <option value="parent" {{ if eq .Person.Type 0 }}selected{{end}}>Parent</option>
+                <option value="child" {{ if eq .Person.Type 1 }}selected{{end}}>Child</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="birthdate">Birthday:</label>
+            <input type="date" name="birthdate" value="{{if .Person }}{{ .Person.Birthday | formatDateForInput }}{{end}}">
+        </div>
+
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" value="{{ .Person.Name }}">
+        </div>
+
+        <div class="form-group">
+            <label for="gender">Gender:</label>
+            <select id="gender" name="gender">
+                <option value="male" {{ if eq .Person.Gender 0 }}selected{{end}}>Male</option>
+                <option value="female" {{ if eq .Person.Gender 1 }}selected{{end}}>Female</option>
+            </select>
+        </div>
+
         <input type="hidden" name="id" value="{{ .Person.Id }}">
-        <button type="submit">Submit</button>
+        <button type="submit">Submit Person</button>
     </form>
 {{ end }}

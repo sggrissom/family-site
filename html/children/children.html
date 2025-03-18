@@ -9,6 +9,8 @@
             <div class="person-details">
                 <p>b-day: {{ .Birthday | formatDate }}</p>
                 <p>age: {{ .Age }}</p>
+                <p>{{ .Gender }}</p>
+                <p>{{ .Type }}</p>
                 <p><a href="/height/table/{{ .Id }}">height table</a></p>
                 <p><a href="/weight/table/{{ .Id }}">weight table</a></p>
             </div>

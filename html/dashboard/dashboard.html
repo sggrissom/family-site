@@ -7,11 +7,11 @@
     <div class="info-cards">
       <div class="info-card">
         <h3>Members</h3>
-        <p>4</p>
+        <p>{{ len .Family.OwningUsers }}</p>
       </div>
       <div class="info-card">
         <h3>People</h3>
-        <p>5</p>
+        <p>{{ len .People }}</p>
       </div>
       <div class="info-card">
         <h3>Milestones</h3>
@@ -29,22 +29,21 @@
     <table>
       <thead>
         <tr>
-          <th>Title</th>
-          <th>Date</th>
-          <th>Associated Person(s)</th>
+          <th>Name</th>
+          <th>Birthday</th>
+          <th>Age</th>
+          <th>Type</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>Johnny's First Steps</td>
-          <td>2023-08-10</td>
-          <td>Johnny</td>
-        </tr>
-        <tr>
-          <td>Aunt Lisa's Birthday</td>
-          <td>2024-03-05</td>
-          <td>Lisa</td>
-        </tr>
+        {{ range .People }}
+          <tr>
+            <td>{{ .Name }}</td>
+            <td>{{ .Birthday | formatDate }}</td>
+            <td>{{ .Age }}</td>
+            <td>{{ . | displayType }}</td>
+          </tr>
+        {{ end }}
       </tbody>
     </table>
   </div>
