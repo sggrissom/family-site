@@ -11,7 +11,7 @@
 
         <div class="form-group">
             <label for="birthdate">Birthday:</label>
-            <input type="date" name="birthdate" value="{{if .Person }}{{ .Person.Birthday | formatDateForInput }}{{end}}">
+            <input type="date" id="birthdate" name="birthdate" value="{{if .Person }}{{ .Person.Birthday | formatDateForInput }}{{end}}">
         </div>
 
         <div class="form-group">
@@ -29,5 +29,6 @@
 
         <input type="hidden" name="id" value="{{ .Person.Id }}">
         <button type="submit">Submit Person</button>
+        <a href="/" class="button button-secondary">Cancel</button>
     </form>
 {{ end }}

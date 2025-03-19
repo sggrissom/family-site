@@ -4,28 +4,7 @@
     <h2>Family Dashboard</h2>
     <p>Welcome {{ .Family.Name }} family! Here’s an overview of your family.</p>
 
-    <div class="info-cards">
-      <div class="info-card">
-        <h3>Members</h3>
-        <p>{{ len .Family.OwningUsers }}</p>
-      </div>
-      <div class="info-card">
-        <h3>People</h3>
-        <p>{{ len .People }}</p>
-      </div>
-      <div class="info-card">
-        <h3>Milestones</h3>
-        <p>10</p>
-      </div>
-    </div>
-
-    <div class="actions">
-      <a class="cta-button" href="/">Add Person</a>
-      <a class="cta-button" href="/">Add Milestone</a>
-      <a class="cta-button" href="/">Invite Members</a>
-    </div>
-
-    <h3>Recent Milestones</h3>
+    <h3>Family Members</h3>
     <table>
       <thead>
         <tr>
@@ -38,7 +17,7 @@
       <tbody>
         {{ range .People }}
           <tr>
-            <td>{{ .Name }}</td>
+            <td><a href="/children/add/{{.Id}}">{{ .Name }}</a></td>
             <td>{{ .Birthday | formatDate }}</td>
             <td>{{ .Age }}</td>
             <td>{{ . | displayType }}</td>
@@ -46,6 +25,11 @@
         {{ end }}
       </tbody>
     </table>
+
+    <div class="actions">
+      <a class="cta-button" href="/children/add">Add Person</a>
+      <a class="cta-button" href="/milestones/add">Add Milestone</a>
+    </div>
   </div>
 {{ end }}
 
@@ -68,7 +52,7 @@
     }
 
     .actions {
-      margin-bottom: 30px;
+      margin-top: 30px;
     }
     .actions .cta-button {
       margin-right: 10px;

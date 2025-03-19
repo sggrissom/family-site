@@ -14,6 +14,7 @@ func RegisterDashboardPages(mux *http.ServeMux) {
 func rootPage(context ResponseContext) {
 	if context.user.Id == 0 {
 		RenderNoBaseTemplate(context, "welcome")
+		return
 	}
 
 	if context.user.PrimaryFamilyId > 0 {
