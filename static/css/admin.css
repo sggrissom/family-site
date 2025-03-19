@@ -84,3 +84,33 @@ footer {
   text-align: center;
   padding: 1rem;
 }
+
+.info-cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.info-card {
+  background-color: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  flex: 1 1 200px;
+  padding: 20px;
+  text-align: center;
+}
+
+.info-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+}
+
+.info-card p {
+  margin: 0;
+  font-size: 1.4em;
+  font-weight: bold;
+  color: var(--text-color);
+}

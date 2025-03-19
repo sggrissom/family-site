@@ -1,7 +1,25 @@
 {{ define "title"}}profile{{ end }}
 {{ define "content" }}
-<h2>profile</h2>
-<p>Username: {{ .Username }}</p>
-<p>User Id: {{ .UserId }}</p>
-<a class="button" href="/logout">Logout</a>
+
+<div class="container family-dashboard">
+    <h2>profile</h2>
+
+    <div class="info-cards">
+      <div class="info-card">
+        <h3>Families</h3>
+        <p>{{ len .Families }}</p>
+      </div>
+      <div class="info-card">
+        <h3>People</h3>
+        <p>1</p>
+      </div>
+      <div class="info-card">
+        <h3>Milestones</h3>
+        <p>10</p>
+      </div>
+    </div>
+    <p>Username: {{ .Username }}</p>
+    <p>User Id: {{ .UserId }}</p>
+    <a class="button" href="/logout">Logout</a>
+</div>
 {{ end }}

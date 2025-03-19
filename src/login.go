@@ -162,7 +162,12 @@ func registerPage(context ResponseContext) {
 }
 
 func profilePage(context ResponseContext) {
-	RenderTemplate(context, "profile")
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		families := GetFamiliesForUser(tx, context.user.Id)
+		RenderTemplateWithData(context, "profile", map[string]any{
+			"Families": families,
+		})
+	})
 }
 
 func createUser(context ResponseContext) {
