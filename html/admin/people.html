@@ -1,0 +1,27 @@
+{{ define "content" }}
+  <h1>Manage People</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Person ID</th>
+        <th>Name</th>
+        <th>Birthday</th>
+        <th>Age</th>
+        <th>Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .People }}
+      <tr>
+        <td>{{.Id}}</td>
+        <td>{{.Name}}</td>
+        <td>{{ .Birthday | formatDate }}</td>
+        <td>{{ .Age }}</td>
+        <td>{{ . | displayType }}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+
+{{ end }}

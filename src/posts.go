@@ -72,7 +72,7 @@ func postsPage(context ResponseContext) {
 func addPostPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		RenderTemplateWithData(context, "posts-add", map[string]interface{}{
-			"People": getAllPeople(tx),
+			"People": GetAllPeople(tx),
 		})
 	})
 }
@@ -81,7 +81,7 @@ func editPostPage(context ResponseContext) {
 		id := context.r.PathValue("id")
 		idVal, _ := strconv.Atoi(id)
 		RenderTemplateWithData(context, "posts-add", map[string]interface{}{
-			"People": getAllPeople(tx),
+			"People": GetAllPeople(tx),
 			"Post":   getPost(tx, idVal),
 		})
 	})

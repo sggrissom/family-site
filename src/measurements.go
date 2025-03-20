@@ -207,14 +207,14 @@ func RegisterMeasurementsPages(mux *http.ServeMux) {
 func mainHeightsPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		RenderTemplateWithData(context, "height", map[string]interface{}{
-			"People": getAllPeople(tx),
+			"People": GetAllPeople(tx),
 		})
 	})
 }
 func mainWeightsPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		RenderTemplateWithData(context, "weight", map[string]interface{}{
-			"People": getAllPeople(tx),
+			"People": GetAllPeople(tx),
 		})
 	})
 }
@@ -222,7 +222,7 @@ func mainWeightsPage(context ResponseContext) {
 func addHeightPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		RenderTemplateWithData(context, "height-add", map[string]interface{}{
-			"People": getAllPeople(tx),
+			"People": GetAllPeople(tx),
 		})
 	})
 }
@@ -257,7 +257,7 @@ func saveHeightPage(context ResponseContext) {
 func addWeightPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		RenderTemplateWithData(context, "weight-add", map[string]interface{}{
-			"People": getAllPeople(tx),
+			"People": GetAllPeople(tx),
 		})
 	})
 }

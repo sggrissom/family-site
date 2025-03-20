@@ -118,7 +118,7 @@ func PackPerson(self *Person, buf *vpack.Buffer) {
 
 var PersonBucket = vbolt.Bucket(&Info, "people", vpack.FInt, PackPerson)
 
-func getAllPeople(tx *vbolt.Tx) (people []Person) {
+func GetAllPeople(tx *vbolt.Tx) (people []Person) {
 	vbolt.IterateAll(tx, PersonBucket, func(key int, value Person) bool {
 		prepPerson(&value)
 		generic.Append(&people, value)
@@ -213,13 +213,13 @@ func RegisterChildrenPage(mux *http.ServeMux) {
 func peoplePage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		RenderTemplateWithData(context, "children", map[string]any{
-			"People": getAllPeople(tx),
+			"People": GetAllPeople(tx),
 		})
 	})
 }
 func personAdminPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateBlock(context, "children", "childrenAdmin", getAllPeople(tx))
+		RenderTemplateBlock(context, "children", "childrenAdmin", GetAllPeople(tx))
 	})
 }
 func addPersonPage(context ResponseContext) {

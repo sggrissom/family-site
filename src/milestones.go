@@ -127,7 +127,7 @@ func milestonesPage(context ResponseContext) {
 func addMilestonesPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		RenderTemplateWithData(context, "milestones-add", map[string]interface{}{
-			"People": getAllPeople(tx),
+			"People": GetAllPeople(tx),
 		})
 	})
 }
