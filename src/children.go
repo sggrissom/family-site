@@ -208,6 +208,8 @@ func RegisterChildrenPage(mux *http.ServeMux) {
 	mux.Handle("GET /family/create", AuthHandler(ContextFunc(createFamilyPage)))
 	mux.Handle("GET /family/edit/{id}", AuthHandler(ContextFunc(editFamilyPage)))
 	mux.Handle("POST /family/create", AuthHandler(ContextFunc(saveFamily)))
+
+	mux.Handle("GET /person/{id}", PublicHandler(ContextFunc(personPage)))
 }
 
 func peoplePage(context ResponseContext) {
@@ -316,4 +318,16 @@ func saveFamily(context ResponseContext) {
 	})
 
 	http.Redirect(context.w, context.r, "/children", http.StatusFound)
+}
+
+func personPage(context ResponseContext) {
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		id := context.r.PathValue("id")
+		idVal, _ := strconv.Atoi(id)
+		person := getPerson(tx, idVal)
+		prepPerson(&person)
+		RenderTemplateWithData(context, "person", map[string]any{
+			"Person": person,
+		})
+	})
 }

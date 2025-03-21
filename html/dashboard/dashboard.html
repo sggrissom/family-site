@@ -17,7 +17,7 @@
       <tbody>
         {{ range .People }}
           <tr>
-            <td><a href="/children/add/{{.Id}}">{{ .Name }}</a></td>
+            <td><a href="/person/{{.Id}}">{{ .Name }}</a></td>
             <td>{{ .Birthday | formatDate }}</td>
             <td>{{ .Age }}</td>
             <td>{{ . | displayType }}</td>
