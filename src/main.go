@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 	"go.hasen.dev/vbolt"
 )
 
@@ -299,6 +300,10 @@ func main() {
 
 	if preloadTemplates() != nil {
 		log.Fatal("error preloading templates")
+	}
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
 	}
 
 	db = vbolt.Open(dbFile)

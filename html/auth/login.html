@@ -1,4 +1,4 @@
-{{ define "title"}}login{{ end }}
+{{ define "title"}}Login{{ end }}
 {{ define "content" }}
 
 <h2>Login</h2>
@@ -9,5 +9,19 @@
     <input type="password" id="password" name="password" required><br>
     <button type="submit">Login</button>
 </form>
-<a href="/register" style="float: right; font-size: small;">Register</a>
+
+<a href="/register" style="font-size: small;">Register</a>
+<br>
+<a id="forgotLink" href="/forgot" style="font-size: small;">Forgot Password?</a>
+
+<script>
+  const emailInput = document.getElementById("email");
+  const forgotLink = document.getElementById("forgotLink");
+
+  emailInput.addEventListener("input", function() {
+      const email = encodeURIComponent(this.value);
+      forgotLink.href = "/forgot?email=" + email;
+  });
+</script>
+
 {{ end }}

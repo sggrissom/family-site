@@ -2,7 +2,10 @@ package main
 
 import (
 	"errors"
+	"log"
 	"net/http"
+	"net/smtp"
+	"os"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -165,6 +168,7 @@ func RegisterLoginPages(mux *http.ServeMux) {
 	mux.Handle("GET /register", PublicHandler(ContextFunc(registerPage)))
 	mux.Handle("POST /register", PublicHandler(ContextFunc(createUser)))
 	mux.Handle("GET /profile", AuthHandler(ContextFunc(profilePage)))
+	mux.Handle("GET /forgot", PublicHandler(ContextFunc(forgotEmail)))
 }
 
 func loginPage(context ResponseContext) {
@@ -257,6 +261,33 @@ func logout(context ResponseContext) {
 		HttpOnly: true,
 		Expires:  time.Unix(0, 0),
 	})
+
+	http.Redirect(context.w, context.r, "/", http.StatusFound)
+}
+
+func forgotEmail(context ResponseContext) {
+	accountEmail := context.r.URL.Query().Get("email")
+
+	email := os.Getenv("EMAIL")
+	appPassword := os.Getenv("APP_PASSWORD")
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
+	recipient := accountEmail
+	resetLink := "https://grissom.zone/"
+
+	message := []byte("Subject: Reset Your Password\r\n" +
+		"\r\n" +
+		"Hello,\r\n\r\n" +
+		"To reset your password, please click the link below:\r\n" +
+		resetLink + "\r\n\r\n" +
+		"If you did not request a password reset, please ignore this email.\r\n")
+
+	auth := smtp.PlainAuth("", email, appPassword, smtpHost)
+
+	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, email, []string{recipient}, message)
+	if err != nil {
+		log.Fatalf("Failed to send email: %v", err)
+	}
 
 	http.Redirect(context.w, context.r, "/", http.StatusFound)
 }
