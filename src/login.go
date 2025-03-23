@@ -144,6 +144,20 @@ func AddUser(dbHandle *bolt.DB, req AddUserRequest) (err error) {
 	return
 }
 
+func DeleteUser(dbHandle *bolt.DB, userId int) (err error) {
+	var user User
+	vbolt.WithWriteTx(dbHandle, func(tx *vbolt.Tx) {
+		user = GetUser(tx, userId)
+	})
+	vbolt.WithWriteTx(dbHandle, func(tx *vbolt.Tx) {
+		vbolt.Delete(tx, UsersBucket, user.Id)
+		vbolt.Delete(tx, PasswordBucket, user.Id)
+		vbolt.Delete(tx, EmailBucket, user.Email)
+		vbolt.TxCommit(tx)
+	})
+	return
+}
+
 func RegisterLoginPages(mux *http.ServeMux) {
 	mux.Handle("GET /login", PublicHandler(ContextFunc(loginPage)))
 	mux.Handle("GET /logout", PublicHandler(ContextFunc(logout)))

@@ -19,7 +19,7 @@
           {{ if eq .Id $.PrimaryFamilyId}}
             <td>Fav</td>
           {{ else }}
-            <td><a class="button" href="/family/favorite/{.Id}">Favorite</a></td>
+            <td><a class="button" href="/family/favorite/{{.Id}}">Favorite</a></td>
           {{ end }}
         </tr>
         {{end}}

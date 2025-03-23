@@ -47,6 +47,7 @@
             <option value="">Select Action</option>
             <option value="reset">Reset Password</option>
             <option value="login">Log In as This User</option>
+            <option value="delete">Delete User</option>
           </select>
           <button class="apply-action" data-userid="{{.Id}}">Go</button>
         </td>
@@ -90,6 +91,10 @@
         var action = dropdown.value;
         if (!action) {
           alert('Please select an action for user ' + userId);
+          return;
+        }
+        if (action == "delete") {
+          window.location.href = '/admin/user/delete/' + userId;
           return;
         }
         alert('Performing "' + action + '" for user ' + userId);

@@ -282,6 +282,18 @@ func AuthHandler(next ContextFunc) http.Handler {
 	})
 }
 
+func AdminHandler(next ContextFunc) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		context := BuildResponseContext(w, r)
+		if !context.isAdmin {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		next(context)
+	})
+}
+
 func main() {
 	fmt.Println("family site starting")
 
