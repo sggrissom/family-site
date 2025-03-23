@@ -171,6 +171,7 @@ func internalRenderTemplateWithData(context ResponseContext, templateNames []str
 	if context.user.Id != 0 {
 		data["Username"] = context.user.Email
 		data["UserId"] = context.user.Id
+		data["PrimaryFamilyId"] = context.user.PrimaryFamilyId
 		if context.isAdmin {
 			data["isAdmin"] = true
 		}

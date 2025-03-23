@@ -8,6 +8,7 @@
         <tr>
           <th>Family ID</th>
           <th>Name</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -15,6 +16,11 @@
         <tr>
           <td>{{.Id}}</td>
           <td>{{.Name}}</td>
+          {{ if eq .Id $.PrimaryFamilyId}}
+            <td>Fav</td>
+          {{ else }}
+            <td><a class="button" href="/family/favorite/{.Id}">Favorite</a></td>
+          {{ end }}
         </tr>
         {{end}}
       </tbody>

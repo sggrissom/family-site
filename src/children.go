@@ -310,7 +310,7 @@ func saveFamily(context ResponseContext) {
 		}
 		vbolt.Write(tx, FamilyBucket, entry.Id, &entry)
 		updateFamilyIndex(tx, entry)
-		if user.PrimaryFamilyId != 0 {
+		if user.PrimaryFamilyId == 0 {
 			user.PrimaryFamilyId = entry.Id
 			vbolt.Write(tx, UsersBucket, context.user.Id, &user)
 		}
