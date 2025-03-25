@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"log"
 	"net/http"
@@ -67,6 +69,9 @@ var PasswordBucket = vbolt.Bucket(&Info, "password", vpack.FInt, vpack.ByteSlice
 
 var EmailBucket = vbolt.Bucket(&Info, "email", vpack.StringZ, vpack.Int)
 
+// token => user id
+var ResetPasswordBucket = vbolt.Bucket(&Info, "password-token", vpack.String, vpack.FInt)
+
 type AddUserRequest struct {
 	Email     string
 	Password  string
@@ -84,6 +89,7 @@ func isPasswordValid(pwd string) bool {
 
 var ErrEmailTaken = errors.New("EmailTaken")
 var ErrPasswordInvalid = errors.New("PasswordInvalid")
+var ErrInvalidToken = errors.New("InvalidToken")
 
 func GetAllUsers(tx *vbolt.Tx) (users []User) {
 	vbolt.IterateAll(tx, UsersBucket, func(key int, value User) bool {
@@ -101,6 +107,11 @@ func GetUserId(tx *vbolt.Tx, username string) (userId int) {
 func GetUser(tx *vbolt.Tx, userId int) (user User) {
 	vbolt.Read(tx, UsersBucket, userId, &user)
 	return user
+}
+
+func GetUserIdFromToken(tx *vbolt.Tx, token string) (userId int) {
+	vbolt.Read(tx, ResetPasswordBucket, token, &userId)
+	return userId
 }
 
 func AddUserTx(tx *vbolt.Tx, req AddUserRequest, hash []byte) User {
@@ -161,6 +172,31 @@ func DeleteUser(dbHandle *bolt.DB, userId int) (err error) {
 	return
 }
 
+func ResetUser(dbHandle *bolt.DB, token string, req AddUserRequest) (err error) {
+	if !isPasswordValid(req.Password) {
+		return ErrPasswordInvalid
+	}
+
+	var user User
+	vbolt.WithReadTx(dbHandle, func(tx *vbolt.Tx) {
+		userId := GetUserIdFromToken(tx, token)
+		user = GetUser(tx, userId)
+	})
+
+	if user.Id == 0 {
+		return ErrInvalidToken
+	}
+
+	hash, _ := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+
+	vbolt.WithWriteTx(dbHandle, func(tx *vbolt.Tx) {
+		vbolt.Write(tx, PasswordBucket, user.Id, &hash)
+		vbolt.Delete(tx, ResetPasswordBucket, token)
+		vbolt.TxCommit(tx)
+	})
+	return
+}
+
 func RegisterLoginPages(mux *http.ServeMux) {
 	mux.Handle("GET /login", PublicHandler(ContextFunc(loginPage)))
 	mux.Handle("GET /logout", PublicHandler(ContextFunc(logout)))
@@ -169,6 +205,9 @@ func RegisterLoginPages(mux *http.ServeMux) {
 	mux.Handle("POST /register", PublicHandler(ContextFunc(createUser)))
 	mux.Handle("GET /profile", AuthHandler(ContextFunc(profilePage)))
 	mux.Handle("GET /forgot", PublicHandler(ContextFunc(forgotEmail)))
+	mux.Handle("GET /reset-password-sent", PublicHandler(ContextFunc(resetEmailSent)))
+	mux.Handle("GET /reset-password", PublicHandler(ContextFunc(resetPassword)))
+	mux.Handle("POST /reset-password", PublicHandler(ContextFunc(resetPasswordPost)))
 }
 
 func loginPage(context ResponseContext) {
@@ -265,15 +304,39 @@ func logout(context ResponseContext) {
 	http.Redirect(context.w, context.r, "/", http.StatusFound)
 }
 
+func generateToken(n int) (string, error) {
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
+func saveToken(token string, email string) {
+	var userId int
+	vbolt.WithReadTx(db, func(readTx *vbolt.Tx) {
+		userId = GetUserId(readTx, email)
+	})
+	vbolt.WithWriteTx(db, func(writeTx *vbolt.Tx) {
+		vbolt.Write(writeTx, ResetPasswordBucket, token, &userId)
+	})
+}
+
 func forgotEmail(context ResponseContext) {
 	accountEmail := context.r.URL.Query().Get("email")
+	token, err := generateToken(20)
+	if err != nil {
+		http.Error(context.w, err.Error(), http.StatusUnprocessableEntity)
+	}
+	saveToken(token, accountEmail)
 
 	email := os.Getenv("EMAIL")
 	appPassword := os.Getenv("APP_PASSWORD")
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
 	recipient := accountEmail
-	resetLink := "https://grissom.zone/"
+	resetLink := "https://grissom.zone/reset-password?token=" + token
 
 	message := []byte("Subject: Reset Your Password\r\n" +
 		"\r\n" +
@@ -284,10 +347,33 @@ func forgotEmail(context ResponseContext) {
 
 	auth := smtp.PlainAuth("", email, appPassword, smtpHost)
 
-	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, email, []string{recipient}, message)
+	err = smtp.SendMail(smtpHost+":"+smtpPort, auth, email, []string{recipient}, message)
 	if err != nil {
 		log.Fatalf("Failed to send email: %v", err)
 	}
 
-	http.Redirect(context.w, context.r, "/", http.StatusFound)
+	http.Redirect(context.w, context.r, "/reset-password-sent", http.StatusFound)
+}
+
+func resetEmailSent(context ResponseContext) {
+	RenderTemplate(context, "forgot-password-sent")
+}
+
+func resetPassword(context ResponseContext) {
+	RenderTemplateWithData(context, "reset-password", map[string]any{
+		"Token": context.r.URL.Query().Get("token"),
+	})
+}
+
+func resetPasswordPost(context ResponseContext) {
+	token := context.r.FormValue("token")
+	addUserRequest := AddUserRequest{
+		Password: context.r.PostFormValue("password"),
+	}
+	err := ResetUser(db, token, addUserRequest)
+	if err != nil {
+		http.Error(context.w, err.Error(), http.StatusUnauthorized)
+	}
+
+	http.Redirect(context.w, context.r, "/login", http.StatusFound)
 }
