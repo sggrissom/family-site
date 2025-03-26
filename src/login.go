@@ -320,6 +320,7 @@ func saveToken(token string, email string) {
 	})
 	vbolt.WithWriteTx(db, func(writeTx *vbolt.Tx) {
 		vbolt.Write(writeTx, ResetPasswordBucket, token, &userId)
+		writeTx.Commit()
 	})
 }
 
