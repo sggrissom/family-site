@@ -41,6 +41,7 @@ type Person struct {
 	Name     string
 	Birthday time.Time
 	Age      string
+	ImageId  int
 }
 
 func parsePersonType(s string) (PersonType, error) {
@@ -114,6 +115,7 @@ func PackPerson(self *Person, buf *vpack.Buffer) {
 	vpack.Int(&self.FamilyId, buf)
 	vpack.IntEnum(&self.Type, buf)
 	vpack.IntEnum(&self.Gender, buf)
+	vpack.Int(&self.ImageId, buf)
 }
 
 var PersonBucket = vbolt.Bucket(&Info, "people", vpack.FInt, PackPerson)
@@ -326,8 +328,13 @@ func personPage(context ResponseContext) {
 		idVal, _ := strconv.Atoi(id)
 		person := getPerson(tx, idVal)
 		prepPerson(&person)
+		var image Image
+		if person.ImageId > 0 {
+			vbolt.Read(tx, ImageBucket, person.ImageId, &image)
+		}
 		RenderTemplateWithData(context, "person", map[string]any{
 			"Person": person,
+			"Image":  image,
 		})
 	})
 }

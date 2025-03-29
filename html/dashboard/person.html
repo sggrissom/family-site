@@ -3,8 +3,8 @@
 <div class="person-container">
     <div class="person-header">
         <div class="profile-picture">
-            {{ if false }}
-                <img src="{{ .Person.ProfilePictureURL }}" alt="Profile Picture of {{ .Person.Name }}">
+            {{ if ne .Person.ImageId 0 }}
+                <img src="{{ .Image.Path }}" alt="Profile Picture of {{ .Person.Name }}">
             {{ else }}
                 <div class="placeholder-picture">
                     {{ if .Person.Name }}
