@@ -121,12 +121,13 @@ func preloadTemplates() error {
 	return nil
 }
 
-func RenderNoBaseTemplate(context ResponseContext, templateName string) {
-	RenderNoBaseTemplateWithData(context, templateName, map[string]any{})
+func RenderLoggedOutTemplate(context ResponseContext, templateName string) {
+	RenderLoggedOutTemplateWithData(context, templateName, map[string]any{})
 }
 
-func RenderNoBaseTemplateWithData(context ResponseContext, templateName string, data map[string]interface{}) {
+func RenderLoggedOutTemplateWithData(context ResponseContext, templateName string, data map[string]interface{}) {
 	internalRenderTemplateWithData(context, []string{templateName}, data)
+	internalRenderTemplateWithData(context, []string{"logged-out-base", templateName}, data)
 }
 
 func RenderTemplate(context ResponseContext, templateName string) {
@@ -134,7 +135,11 @@ func RenderTemplate(context ResponseContext, templateName string) {
 }
 
 func RenderTemplateWithData(context ResponseContext, templateName string, data map[string]interface{}) {
-	internalRenderTemplateWithData(context, []string{"base", templateName}, data)
+	if context.user.Id == 0 {
+		internalRenderTemplateWithData(context, []string{"logged-out-base", templateName}, data)
+	} else {
+		internalRenderTemplateWithData(context, []string{"base", templateName}, data)
+	}
 }
 
 var ErrInvalidTemplate = errors.New("InvalidTemplate")
@@ -340,6 +345,7 @@ func main() {
 	RegisterMilestonesPages(mux.family)
 	RegisterAdminPages(mux.family)
 	RegisterDashboardPages(mux.family)
+	RegisterImagePages(mux.family)
 
 	// HTTP to HTTPS redirect handler
 	go func() {

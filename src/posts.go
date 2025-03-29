@@ -1,12 +1,7 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
@@ -57,9 +52,6 @@ func RegisterPostPages(mux *http.ServeMux) {
 	mux.Handle("GET /posts/edit/{id}", AuthHandler(ContextFunc(editPostPage)))
 	mux.Handle("GET /posts/delete/{id}", AuthHandler(ContextFunc(deletePost)))
 	mux.Handle("POST /posts/add", AuthHandler(ContextFunc(savePost)))
-	mux.Handle("POST /post/upload-image", AuthHandler(ContextFunc(uploadImage)))
-
-	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 }
 
 func postsPage(context ResponseContext) {
@@ -69,6 +61,7 @@ func postsPage(context ResponseContext) {
 		})
 	})
 }
+
 func addPostPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		RenderTemplateWithData(context, "posts-add", map[string]interface{}{
@@ -76,6 +69,7 @@ func addPostPage(context ResponseContext) {
 		})
 	})
 }
+
 func editPostPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		id := context.r.PathValue("id")
@@ -97,6 +91,7 @@ func deletePost(context ResponseContext) {
 
 	http.Redirect(context.w, context.r, "/posts", http.StatusFound)
 }
+
 func savePost(context ResponseContext) {
 	context.r.ParseForm()
 	entryDate := context.r.FormValue("entryDate")
@@ -122,43 +117,4 @@ func savePost(context ResponseContext) {
 	})
 
 	http.Redirect(context.w, context.r, "/posts", http.StatusFound)
-}
-func uploadImage(context ResponseContext) {
-	context.r.Body = http.MaxBytesReader(context.w, context.r.Body, 10<<23)
-
-	if err := context.r.ParseMultipartForm(10 << 23); err != nil {
-		http.Error(context.w, "File too large", http.StatusBadRequest)
-		return
-	}
-
-	file, handler, err := context.r.FormFile("image")
-	if err != nil {
-		http.Error(context.w, "Error retrieving file", http.StatusInternalServerError)
-		return
-	}
-	defer file.Close()
-
-	filename := fmt.Sprintf("%d-%s", time.Now().Unix(), handler.Filename)
-	savePath := filepath.Join("uploads", filename)
-
-	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
-		http.Error(context.w, "Error creating directory", http.StatusInternalServerError)
-		return
-	}
-
-	dst, err := os.Create(savePath)
-	if err != nil {
-		http.Error(context.w, "Error saving file", http.StatusInternalServerError)
-		return
-	}
-	defer dst.Close()
-	if _, err := io.Copy(dst, file); err != nil {
-		http.Error(context.w, "Error saving file", http.StatusInternalServerError)
-		return
-	}
-
-	fileURL := fmt.Sprintf("/uploads/%s", filename)
-	response := map[string]string{"url": fileURL}
-	context.w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(context.w).Encode(response)
 }

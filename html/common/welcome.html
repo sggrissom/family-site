@@ -1,47 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Family Site - Welcome</title>
-  <link rel="stylesheet" href="/static/css/base.css">
-  <style>
-    .hero {
-      position: relative;
-      background: linear-gradient(135deg, var(--secondary-color) 30%, #b2f2bb 100%);
-      min-height: 60vh;
-    }
-
-    .hero-content {
-      background-color: #fff;
-      color: var(--text-color);
-      max-width: 600px;
-      padding: 40px;
-      border-radius: 8px;
-      text-align: center;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .hero-content h1 {
-      margin-top: 0;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="logo">Family Site</div>
-    <nav>
-      <a href="/login">Log In</a>
-      <a href="/register">Sign Up</a>
-    </nav>
-  </header>
+{{ define "allContent" }}
   <div class="hero">
     <h1>Welcome to a Family Site</h1>
     <p style="margin-bottom: 40px;">Track some family stuff.</p>
     <a class="cta-button" href="/register">Get Started</a>
   </div>
-  <footer>
-    &copy; 2024 Family Site
-  </footer>
-</body>
-</html>
+{{ end }}

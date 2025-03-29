@@ -16,7 +16,7 @@ func RegisterDashboardPages(mux *http.ServeMux) {
 
 func rootPage(context ResponseContext) {
 	if context.user.Id == 0 {
-		RenderNoBaseTemplate(context, "welcome")
+		RenderLoggedOutTemplate(context, "welcome")
 		return
 	}
 
