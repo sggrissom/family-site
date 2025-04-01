@@ -4,7 +4,7 @@
     <div class="person-header">
         <div class="profile-picture">
             {{ if ne .Person.ImageId 0 }}
-                <img src="{{ .Image.Path }}" alt="Profile Picture of {{ .Person.Name }}">
+                <img src="/uploads/{{ .Person.ImageId }}" alt="Profile Picture of {{ .Person.Name }}">
             {{ else }}
                 <div class="placeholder-picture">
                     {{ if .Person.Name }}

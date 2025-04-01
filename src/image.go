@@ -18,7 +18,6 @@ type Image struct {
 	Id       int
 	OwnerId  int
 	FamilyId int
-	Path     string
 	Filename string
 }
 
@@ -27,7 +26,6 @@ func PackImage(self *Image, buf *vpack.Buffer) {
 	vpack.Int(&self.Id, buf)
 	vpack.Int(&self.OwnerId, buf)
 	vpack.Int(&self.FamilyId, buf)
-	vpack.String(&self.Path, buf)
 	vpack.String(&self.Filename, buf)
 }
 
@@ -41,7 +39,11 @@ func RegisterImagePages(mux *http.ServeMux) {
 	mux.Handle("POST /post/upload-image", AuthHandler(ContextFunc(uploadImage)))
 	mux.Handle("POST /person/upload/{id}", AuthHandler(ContextFunc(uploadPersonImage)))
 	mux.Handle("GET /uploads/delete", AuthHandler(ContextFunc(deleteAllImages)))
-	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
+	mux.Handle("GET /uploads/{id}", PublicHandler(ContextFunc(serveImage)))
+}
+
+func buildPath(filename string) (path string) {
+	return filepath.Join("uploads", filename)
 }
 
 func SaveImageFile(context ResponseContext, fileParameter string) (image Image, err error) {
@@ -58,13 +60,12 @@ func SaveImageFile(context ResponseContext, fileParameter string) (image Image, 
 	defer file.Close()
 
 	filename := fmt.Sprintf("%d-%s", time.Now().Unix(), handler.Filename)
-	savePath := filepath.Join("uploads", filename)
 
 	if err = os.MkdirAll("uploads", os.ModePerm); err != nil {
 		return image, err
 	}
 
-	dst, err := os.Create(savePath)
+	dst, err := os.Create(buildPath(filename))
 	if err != nil {
 		return image, err
 	}
@@ -73,15 +74,12 @@ func SaveImageFile(context ResponseContext, fileParameter string) (image Image, 
 		return image, err
 	}
 
-	fileURL := fmt.Sprintf("/uploads/%s", filename)
-
 	vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
 		image = Image{
 			Id:       vbolt.NextIntId(tx, ImageBucket),
 			OwnerId:  context.user.Id,
 			FamilyId: context.user.PrimaryFamilyId,
 			Filename: filename,
-			Path:     fileURL,
 		}
 
 		SaveImage(tx, &image)
@@ -95,8 +93,7 @@ func DeleteImageFile(imageId int, readTx *vbolt.Tx) (err error) {
 	var image Image
 	vbolt.Read(readTx, ImageBucket, imageId, &image)
 
-	savePath := filepath.Join("uploads", image.Filename)
-	if err := os.Remove(savePath); err != nil {
+	if err := os.Remove(buildPath(image.Filename)); err != nil {
 		return err
 	}
 
@@ -115,7 +112,7 @@ func uploadImage(context ResponseContext) {
 		return
 	}
 
-	response := map[string]string{"url": image.Path}
+	response := map[string]string{"url": fmt.Sprintf("/uploads/%d", image.Id)}
 	context.w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(context.w).Encode(response)
 }
@@ -150,8 +147,7 @@ func deleteAllImages(context ResponseContext) {
 	deleteIds := make([]int, 0)
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
 		vbolt.IterateAll(tx, ImageBucket, func(key int, value Image) bool {
-			savePath := filepath.Join("uploads", value.Filename)
-			err := os.Remove(savePath)
+			err := os.Remove(buildPath(value.Filename))
 			if err != nil {
 				http.Error(context.w, err.Error(), http.StatusBadRequest)
 			}
@@ -159,7 +155,6 @@ func deleteAllImages(context ResponseContext) {
 			return true
 		})
 	})
-	fmt.Printf("delete Id count: %d\n", len(deleteIds))
 	vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
 		for _, deleteId := range deleteIds {
 			vbolt.Delete(tx, ImageBucket, deleteId)
@@ -168,4 +163,25 @@ func deleteAllImages(context ResponseContext) {
 	})
 
 	http.Redirect(context.w, context.r, "/", http.StatusFound)
+}
+
+func serveImage(context ResponseContext) {
+	id := context.r.PathValue("id")
+	idVal, _ := strconv.Atoi(id)
+	filePath := ""
+
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		var image Image
+		vbolt.Read(tx, ImageBucket, idVal, &image)
+
+		if image.OwnerId == context.user.Id {
+			filePath = buildPath(image.Filename)
+		}
+	})
+
+	if filePath == "" {
+		http.Error(context.w, "cannot show image", http.StatusBadRequest)
+	} else {
+		http.ServeFile(context.w, context.r, filePath)
+	}
 }

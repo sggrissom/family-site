@@ -1,6 +1,7 @@
 
 todo.txt
 .env
+uploads/*
 
 # Binaries for programs and plugins
 *.exe
