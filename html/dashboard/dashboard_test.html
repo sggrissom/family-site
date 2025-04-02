@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Family Dashboard</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f7f9fc;
+      margin: 2rem;
+    }
+
+    .dashboard {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .row {
+      background: white;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .row:hover {
+      background: #f0f4ff;
+    }
+
+    .row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .row-details {
+      margin-top: 1rem;
+      display: none;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .row.open .row-details {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard">
+    <h1>Family Dashboard</h1>
+
+    {{ range .People }}
+        <div class="row" onclick="toggleRow(this)">
+        <div class="row-header">
+            <span>{{ .Name }}</span>
+            <span>{{ .Age }}</span>
+        </div>
+        <div class="row-details">
+            <p><strong>Birthday:</strong> {{ .Birthday | formatDate }}</p>
+            <p><strong>Age:</strong> {{ .Age }}</p>
+            <p><strong>Type:</strong> {{ . | displayType }}</p>
+        </div>
+        </div>
+    {{ end }}
+  </div>
+
+  <script>
+    function toggleRow(row) {
+      row.classList.toggle('open');
+    }
+  </script>
+
+</body>
+</html>

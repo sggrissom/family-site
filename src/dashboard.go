@@ -10,6 +10,7 @@ import (
 
 func RegisterDashboardPages(mux *http.ServeMux) {
 	mux.Handle("/", PublicHandler(ContextFunc(rootPage)))
+	mux.Handle("/test", PublicHandler(ContextFunc(testPage)))
 	mux.Handle("GET /family-list", AuthHandler(ContextFunc(familiesPage)))
 	mux.Handle("GET /family/favorite/{id}", AuthHandler(ContextFunc(favoriteFamily)))
 }
@@ -63,4 +64,15 @@ func favoriteFamily(context ResponseContext) {
 	})
 
 	http.Redirect(context.w, context.r, "/", http.StatusFound)
+}
+
+func testPage(context ResponseContext) {
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		family := getFamily(tx, context.user.PrimaryFamilyId)
+		people := getPeopleInFamily(tx, family.Id)
+		internalRenderTemplateWithData(context, []string{"dashboard_test"}, map[string]any{
+			"Family": family,
+			"People": people,
+		})
+	})
 }
