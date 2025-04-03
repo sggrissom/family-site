@@ -5,26 +5,20 @@
     <p>Welcome {{ .Family.Name }} family! Here’s an overview of your family.</p>
 
     <h3>Family Members</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Birthday</th>
-          <th>Age</th>
-          <th>Type</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{ range .People }}
-          <tr>
-            <td><a href="/person/{{.Id}}">{{ .Name }}</a></td>
-            <td>{{ .Birthday | formatDate }}</td>
-            <td>{{ .Age }}</td>
-            <td>{{ . | displayType }}</td>
-          </tr>
-        {{ end }}
-      </tbody>
-    </table>
+      {{ range .People }}
+        <div class="row" onclick="toggleRow(this)">
+          <div class="row-header">
+              <span>{{ .Name }}</span>
+              <span>{{ .Age }}</span>
+          </div>
+          <div class="row-details">
+              <p><a href="/person/{{.Id}}">{{ .Name }}</a></p>
+              <p><strong>Birthday:</strong> {{ .Birthday | formatDate }}</p>
+              <p><strong>Age:</strong> {{ .Age }}</p>
+              <p><strong>Type:</strong> {{ . | displayType }}</p>
+          </div>
+        </div>
+      {{ end }}
 
     <div class="actions">
       <a class="cta-button" href="/children/add">Add Person</a>
@@ -59,5 +53,48 @@
       margin-bottom: 10px;
     }
 
+    .dashboard {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .row {
+      background: white;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .row:hover {
+      background: #f0f4ff;
+    }
+
+    .row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .row-details {
+      margin-top: 1rem;
+      display: none;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .row.open .row-details {
+      display: block;
+    }
   </style>
+{{ end }}
+
+{{ define "js" }}
+  <script>
+    function toggleRow(row) {
+      row.classList.toggle('open');
+    }
+  </script>
 {{ end }}
