@@ -12,10 +12,12 @@
               <span>{{ .Age }}</span>
           </div>
           <div class="row-details">
+            <div class="row-details-content">
               <p><a href="/person/{{.Id}}">{{ .Name }}</a></p>
               <p><strong>Birthday:</strong> {{ .Birthday | formatDate }}</p>
               <p><strong>Age:</strong> {{ .Age }}</p>
               <p><strong>Type:</strong> {{ . | displayType }}</p>
+            </div>
           </div>
         </div>
       {{ end }}
@@ -79,14 +81,19 @@
     }
 
     .row-details {
-      margin-top: 1rem;
-      display: none;
-      font-size: 0.95rem;
-      color: #555;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.4s ease;
     }
 
     .row.open .row-details {
-      display: block;
+      max-height: 200px;
+    }
+
+    .row-details-content {
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      color: #555;
     }
   </style>
 {{ end }}
@@ -94,7 +101,22 @@
 {{ define "js" }}
   <script>
     function toggleRow(row) {
-      row.classList.toggle('open');
+      const isOpen = row.classList.contains('open');
+      const details = row.querySelector('.row-details');
+
+      if (isOpen) {
+        details.style.maxHeight = '0';
+        row.classList.remove('open');
+      } else {
+        details.style.maxHeight = details.scrollHeight + 'px';
+        row.classList.add('open');
+      }
     }
+
+    window.addEventListener('resize', () => {
+      document.querySelectorAll('.row.open .row-details').forEach(details => {
+        details.style.maxHeight = details.scrollHeight + 'px';
+      });
+    });
   </script>
 {{ end }}
