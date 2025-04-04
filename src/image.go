@@ -38,6 +38,7 @@ func SaveImage(tx *vbolt.Tx, image *Image) {
 func RegisterImagePages(mux *http.ServeMux) {
 	mux.Handle("POST /post/upload-image", AuthHandler(ContextFunc(uploadImage)))
 	mux.Handle("POST /person/upload/{id}", AuthHandler(ContextFunc(uploadPersonImage)))
+	mux.Handle("GET /person/upload/delete/{id}", AuthHandler(ContextFunc(deletePersonImage)))
 	mux.Handle("GET /uploads/delete", AuthHandler(ContextFunc(deleteAllImages)))
 	mux.Handle("GET /uploads/{id}", PublicHandler(ContextFunc(serveImage)))
 }
@@ -184,4 +185,24 @@ func serveImage(context ResponseContext) {
 	} else {
 		http.ServeFile(context.w, context.r, filePath)
 	}
+}
+
+func deletePersonImage(context ResponseContext) {
+	id := context.r.PathValue("id")
+	idVal, _ := strconv.Atoi(id)
+
+	var person Person
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		person = getPerson(tx, idVal)
+		if person.ImageId > 0 {
+			DeleteImageFile(person.ImageId, tx)
+		}
+	})
+	vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
+		person.ImageId = 0
+		vbolt.Write(tx, PersonBucket, person.Id, &person)
+		tx.Commit()
+	})
+
+	http.Redirect(context.w, context.r, "/person/"+id, http.StatusFound)
 }

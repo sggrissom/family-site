@@ -206,3 +206,33 @@ button,.button {
   font-weight: bold;
   color: var(--text-color);
 }
+
+.profile-picture {
+    width: 100px;
+    height: 100px;
+    margin-right: 20px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.profile-picture img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholder-picture {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: #aaa;
+    font-size: 2em;
+    color: #fff;
+}
+

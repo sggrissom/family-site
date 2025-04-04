@@ -39,6 +39,7 @@
             <label for="profilePic">Upload Picture:</label>
             <input type="file" name="profilePic" id="profilePic" accept="image/*" required>
             <button type="submit" class="btn-upload">Upload</button>
+            <a href="/person/upload/delete/{{ .Person.Id }}" class="btn-delete">Delete</a>
         </form>
         {{ end }}
     </div>
@@ -66,35 +67,6 @@
         align-items: center;
         padding: 20px;
         background: #f0f0f0;
-    }
-
-    .profile-picture {
-        width: 100px;
-        height: 100px;
-        margin-right: 20px;
-        border-radius: 50%;
-        overflow: hidden;
-        background-color: #ccc;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .profile-picture img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .placeholder-picture {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        height: 100%;
-        background-color: #aaa;
-        font-size: 2em;
-        color: #fff;
     }
 
     .person-info h2 {
