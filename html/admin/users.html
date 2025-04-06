@@ -8,7 +8,7 @@
 
     <select id="bulk-action-dropdown">
       <option value="">Bulk Actions</option>
-      <option value="reset">Reset Password</option>
+      <option value="delete">Delete</option>
     </select>
     <button id="apply-bulk">Apply</button>
   </div>
@@ -79,6 +79,10 @@
       });
       if (selectedUsers.length === 0) {
         alert('No users selected.');
+        return;
+      }
+      if (bulkAction == "delete") {
+        window.location.href = '/admin/user/delete?ids=' + selectedUsers.join(',');
         return;
       }
       alert('Performing "' + bulkAction + '" on users: ' + selectedUsers.join(', '));

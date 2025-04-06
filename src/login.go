@@ -160,7 +160,7 @@ func AddUser(dbHandle *bolt.DB, req AddUserRequest) (err error) {
 
 func DeleteUser(dbHandle *bolt.DB, userId int) (err error) {
 	var user User
-	vbolt.WithWriteTx(dbHandle, func(tx *vbolt.Tx) {
+	vbolt.WithReadTx(dbHandle, func(tx *vbolt.Tx) {
 		user = GetUser(tx, userId)
 	})
 	vbolt.WithWriteTx(dbHandle, func(tx *vbolt.Tx) {
