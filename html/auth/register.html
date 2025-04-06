@@ -11,7 +11,16 @@
     <input type="email" id="email" name="email" required><br>
     <label for="password">Password:</label>
     <input type="password" id="password" name="password" required><br>
+    <input type="text" class="honeypot" name="honeypot"><br>
     <button type="submit">Create Account</button>
 </form>
 <a href="/login">Already have an account?</a>
+{{ end }}
+
+{{ define "css" }}
+<style>
+    .honeypot {
+        display: none;
+    }
+</style>
 {{ end }}

@@ -228,6 +228,12 @@ func profilePage(context ResponseContext) {
 }
 
 func createUser(context ResponseContext) {
+	honeypot := context.r.PostFormValue("honeypot")
+	if honeypot != "" {
+		http.Error(context.w, "invalid submission", http.StatusUnauthorized)
+		return
+	}
+
 	addUserRequest := AddUserRequest{
 		Email:     context.r.PostFormValue("email"),
 		Password:  context.r.PostFormValue("password"),
