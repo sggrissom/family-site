@@ -348,6 +348,21 @@ func logout(context ResponseContext) {
 		Expires:  time.Unix(0, 0),
 	})
 
+	cookie, err := context.r.Cookie("refresh_token")
+	if err == nil {
+		vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
+			vbolt.Delete(tx, RefreshBucket, cookie.Value)
+			tx.Commit()
+		})
+		http.SetCookie(context.w, &http.Cookie{
+			Name:     "refresh_token",
+			Value:    "",
+			Path:     "/",
+			HttpOnly: true,
+			Expires:  time.Unix(0, 0),
+		})
+	}
+
 	http.Redirect(context.w, context.r, "/", http.StatusFound)
 }
 
