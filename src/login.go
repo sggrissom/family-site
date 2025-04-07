@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/smtp"
@@ -16,9 +19,13 @@ import (
 	"go.hasen.dev/vbolt"
 	"go.hasen.dev/vpack"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 var jwtKey = []byte("test-secret-key") //todo: secret, just testing for now
+var oauthConf *oauth2.Config
+var oauthStateString string
 
 // Models
 
@@ -208,6 +215,8 @@ func ResetUser(dbHandle *bolt.DB, token string, req AddUserRequest) (err error) 
 
 func RegisterLoginPages(mux *http.ServeMux) {
 	mux.Handle("GET /login", PublicHandler(ContextFunc(loginPage)))
+	mux.Handle("GET /login/google", PublicHandler(ContextFunc(googleLogin)))
+	mux.Handle("GET /google/callback", PublicHandler(ContextFunc(googleCallback)))
 	mux.Handle("GET /logout", PublicHandler(ContextFunc(logout)))
 	mux.Handle("POST /login", PublicHandler(ContextFunc(authenticateLogin)))
 	mux.Handle("GET /register", PublicHandler(ContextFunc(registerPage)))
@@ -217,6 +226,15 @@ func RegisterLoginPages(mux *http.ServeMux) {
 	mux.Handle("GET /reset-password-sent", PublicHandler(ContextFunc(resetEmailSent)))
 	mux.Handle("GET /reset-password", PublicHandler(ContextFunc(resetPassword)))
 	mux.Handle("POST /reset-password", PublicHandler(ContextFunc(resetPasswordPost)))
+
+	oauthConf = &oauth2.Config{
+		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+		RedirectURL:  "http://localhost:8666/google/callback",
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+		Endpoint:     google.Endpoint,
+	}
+	oauthStateString = "random"
 }
 
 func loginPage(context ResponseContext) {
@@ -446,4 +464,45 @@ func resetPasswordPost(context ResponseContext) {
 	}
 
 	http.Redirect(context.w, context.r, "/login", http.StatusFound)
+}
+
+func googleLogin(context ResponseContext) {
+	url := oauthConf.AuthCodeURL(oauthStateString, oauth2.AccessTypeOffline)
+	http.Redirect(context.w, context.r, url, http.StatusTemporaryRedirect)
+}
+
+type UserInfo struct {
+	Email         string `json:"email"`
+	VerifiedEmail bool   `json:"verified_email"`
+}
+
+func googleCallback(ctx ResponseContext) {
+	if ctx.r.FormValue("state") != oauthStateString {
+		http.Error(ctx.w, "Invalid OAuth state", http.StatusBadRequest)
+		return
+	}
+
+	code := ctx.r.FormValue("code")
+	token, err := oauthConf.Exchange(context.Background(), code)
+	if err != nil {
+		http.Error(ctx.w, fmt.Sprintf("Code exchange failed: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	client := oauthConf.Client(context.Background(), token)
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		http.Error(ctx.w, fmt.Sprintf("Failed getting user info: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	var userInfo UserInfo
+	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+		http.Error(ctx.w, fmt.Sprintf("Failed decoding user info: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	//need to integrate with existing accounts, just printing for now
+	fmt.Fprintf(ctx.w, "Logged in as: %s", userInfo.Email)
 }

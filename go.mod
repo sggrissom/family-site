@@ -1,6 +1,8 @@
 module test
 
-go 1.22.1
+go 1.23.0
+
+toolchain go1.23.4
 
 require (
 	github.com/boltdb/bolt v1.3.1
@@ -9,7 +11,11 @@ require (
 	go.hasen.dev/vpack v0.2.0
 )
 
-require github.com/joho/godotenv v1.5.1 // indirect
+require (
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
+	golang.org/x/oauth2 v0.29.0 // indirect
+)
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
