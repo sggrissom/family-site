@@ -100,6 +100,7 @@ func isPasswordValid(pwd string) bool {
 var ErrEmailTaken = errors.New("EmailTaken")
 var ErrPasswordInvalid = errors.New("PasswordInvalid")
 var ErrInvalidToken = errors.New("InvalidToken")
+var ErrNoUser = errors.New("NoUser")
 
 func GetAllUsers(tx *vbolt.Tx) (users []User) {
 	vbolt.IterateAll(tx, UsersBucket, func(key int, value User) bool {
@@ -331,6 +332,24 @@ func generateAuthRefreshToken(userId int, w http.ResponseWriter) (err error) {
 	return nil
 }
 
+func authenticateForUser(userId int, w http.ResponseWriter) (err error) {
+	var user User
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		user = GetUser(tx, userId)
+	})
+
+	if user.Id == 0 {
+		return ErrNoUser
+	}
+
+	err = generateAuthJwt(user, w)
+	if err != nil {
+		return
+	}
+	err = generateAuthRefreshToken(userId, w)
+	return
+}
+
 func authenticateLogin(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
 		var userId int
@@ -509,6 +528,13 @@ func googleCallback(ctx ResponseContext) {
 		return
 	}
 
-	//need to integrate with existing accounts, just printing for now
-	fmt.Fprintf(ctx.w, "Logged in as: %s", userInfo.Email)
+	var userId int
+	vbolt.WithReadTx(db, func(readTx *vbolt.Tx) {
+		userId = GetUserId(readTx, userInfo.Email)
+	})
+	if userId > 0 {
+		authenticateForUser(userId, ctx.w)
+	}
+
+	http.Redirect(ctx.w, ctx.r, "/", http.StatusFound)
 }

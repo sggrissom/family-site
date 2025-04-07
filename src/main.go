@@ -264,16 +264,7 @@ func parseRefreshToken(context *ResponseContext) {
 		context.user = GetUser(tx, userId)
 		context.isAdmin = context.user.Id == 1
 
-		err = generateAuthJwt(context.user, context.w)
-		if err != nil {
-			http.Error(context.w, "Error generating token", http.StatusInternalServerError)
-			return
-		}
-		err = generateAuthRefreshToken(userId, context.w)
-		if err != nil {
-			http.Error(context.w, "Error generating token", http.StatusInternalServerError)
-			return
-		}
+		authenticateForUser(userId, context.w)
 	})
 }
 
