@@ -72,6 +72,9 @@ var EmailBucket = vbolt.Bucket(&Info, "email", vpack.StringZ, vpack.Int)
 // token => user id
 var ResetPasswordBucket = vbolt.Bucket(&Info, "password-token", vpack.String, vpack.FInt)
 
+// token => user id
+var RefreshBucket = vbolt.Bucket(&Info, "login-token", vpack.String, vpack.FInt)
+
 type AddUserRequest struct {
 	Email     string
 	Password  string
@@ -111,6 +114,12 @@ func GetUser(tx *vbolt.Tx, userId int) (user User) {
 
 func GetUserIdFromToken(tx *vbolt.Tx, token string) (userId int) {
 	vbolt.Read(tx, ResetPasswordBucket, token, &userId)
+	return userId
+}
+
+func GetUserIdFromRefreshToken(tx *vbolt.Tx, token string) (userId int) {
+	vbolt.Read(tx, RefreshBucket, token, &userId)
+	vbolt.Delete(tx, RefreshBucket, token)
 	return userId
 }
 
@@ -249,6 +258,55 @@ func createUser(context ResponseContext) {
 	http.Redirect(context.w, context.r, "/", http.StatusFound)
 }
 
+func generateAuthJwt(user User, w http.ResponseWriter) (err error) {
+	expirationTime := time.Now().Add(15 * time.Minute)
+	claims := &Claims{
+		Username: user.Email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString(jwtKey)
+	if err != nil {
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    tokenString,
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   60 * 15,
+	})
+
+	vbolt.WithWriteTx(db, func(writeTx *vbolt.Tx) {
+		user.LastLogin = time.Now()
+		vbolt.Write(writeTx, UsersBucket, user.Id, &user)
+		vbolt.TxCommit(writeTx)
+	})
+
+	return nil
+}
+
+func generateAuthRefreshToken(userId int, w http.ResponseWriter) (err error) {
+	refreshToken, err := generateToken(20)
+	if err != nil {
+		return
+	}
+	saveRefreshToken(refreshToken, userId)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   60 * 60 * 24 * 30,
+	})
+	return nil
+}
+
 func authenticateLogin(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
 		var userId int
@@ -262,33 +320,16 @@ func authenticateLogin(context ResponseContext) {
 		err := bcrypt.CompareHashAndPassword(passHash, []byte(context.r.FormValue("password")))
 
 		if err == nil {
-			expirationTime := time.Now().Add(24 * time.Hour)
-			claims := &Claims{
-				Username: email,
-				RegisteredClaims: jwt.RegisteredClaims{
-					ExpiresAt: jwt.NewNumericDate(expirationTime),
-				},
-			}
-			token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-			tokenString, err := token.SignedString(jwtKey)
+			err = generateAuthJwt(user, context.w)
 			if err != nil {
 				http.Error(context.w, "Error generating token", http.StatusInternalServerError)
 				return
 			}
-
-			http.SetCookie(context.w, &http.Cookie{
-				Name:     "auth_token",
-				Value:    tokenString,
-				Path:     "/",
-				HttpOnly: true,
-			})
-
-			vbolt.WithWriteTx(db, func(writeTx *vbolt.Tx) {
-				user.LastLogin = time.Now()
-				vbolt.Write(writeTx, UsersBucket, userId, &user)
-				vbolt.TxCommit(writeTx)
-			})
+			err = generateAuthRefreshToken(userId, context.w)
+			if err != nil {
+				http.Error(context.w, "Error generating token", http.StatusInternalServerError)
+				return
+			}
 
 			http.Redirect(context.w, context.r, "/", http.StatusFound)
 			return
@@ -326,6 +367,13 @@ func saveToken(token string, email string) {
 	})
 	vbolt.WithWriteTx(db, func(writeTx *vbolt.Tx) {
 		vbolt.Write(writeTx, ResetPasswordBucket, token, &userId)
+		writeTx.Commit()
+	})
+}
+
+func saveRefreshToken(token string, userId int) {
+	vbolt.WithWriteTx(db, func(writeTx *vbolt.Tx) {
+		vbolt.Write(writeTx, RefreshBucket, token, &userId)
 		writeTx.Commit()
 	})
 }

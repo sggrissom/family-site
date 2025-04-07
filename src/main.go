@@ -229,12 +229,8 @@ func RenderAdminTemplateWithData(context ResponseContext, templateName string, d
 	}
 }
 
-func BuildResponseContext(w http.ResponseWriter, r *http.Request) (context ResponseContext) {
-	context.w = w
-	context.r = r
-	context.user.Id = 0
-
-	cookie, err := r.Cookie("auth_token")
+func parseAuthToken(context *ResponseContext) {
+	cookie, err := context.r.Cookie("auth_token")
 	if err != nil {
 		return
 	}
@@ -245,7 +241,6 @@ func BuildResponseContext(w http.ResponseWriter, r *http.Request) (context Respo
 		}
 		return jwtKey, nil
 	})
-
 	if err != nil || !token.Valid {
 		return
 	}
@@ -255,6 +250,41 @@ func BuildResponseContext(w http.ResponseWriter, r *http.Request) (context Respo
 			context.user = GetUser(tx, GetUserId(tx, claims.Username))
 			context.isAdmin = context.user.Id == 1
 		})
+	}
+}
+
+func parseRefreshToken(context *ResponseContext) {
+	refresh, err := context.r.Cookie("refresh_token")
+	if err != nil {
+		return
+	}
+
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		userId := GetUserIdFromRefreshToken(tx, refresh.Value)
+		context.user = GetUser(tx, userId)
+		context.isAdmin = context.user.Id == 1
+
+		err = generateAuthJwt(context.user, context.w)
+		if err != nil {
+			http.Error(context.w, "Error generating token", http.StatusInternalServerError)
+			return
+		}
+		err = generateAuthRefreshToken(userId, context.w)
+		if err != nil {
+			http.Error(context.w, "Error generating token", http.StatusInternalServerError)
+			return
+		}
+	})
+}
+
+func BuildResponseContext(w http.ResponseWriter, r *http.Request) (context ResponseContext) {
+	context.w = w
+	context.r = r
+	context.user.Id = 0
+
+	parseAuthToken(&context)
+	if context.user.Id == 0 {
+		parseRefreshToken(&context)
 	}
 
 	return
