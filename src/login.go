@@ -23,7 +23,7 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-var jwtKey = []byte("test-secret-key") //todo: secret, just testing for now
+var jwtKey []byte
 var oauthConf *oauth2.Config
 var oauthStateString string
 
@@ -230,11 +230,17 @@ func RegisterLoginPages(mux *http.ServeMux) {
 	oauthConf = &oauth2.Config{
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-		RedirectURL:  "http://localhost:8666/google/callback",
+		RedirectURL:  os.Getenv("SITE_ROOT") + "/google/callback",
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint:     google.Endpoint,
 	}
-	oauthStateString = "random"
+	token, err := generateToken(20)
+	if err != nil {
+		log.Fatal("error generating oauth token")
+	}
+	oauthStateString = token
+
+	jwtKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 }
 
 func loginPage(context ResponseContext) {
