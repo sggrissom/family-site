@@ -200,8 +200,6 @@ func CalculateAge(birthday time.Time, includeMonths bool) string {
 }
 
 func RegisterChildrenPage(mux *http.ServeMux) {
-	mux.Handle("/children", PublicHandler(ContextFunc(peoplePage)))
-	mux.Handle("/children/admin", AuthHandler(ContextFunc(personAdminPage)))
 	mux.Handle("GET /children/add", AuthHandler(ContextFunc(addPersonPage)))
 	mux.Handle("GET /children/add/{id}", PublicHandler(ContextFunc(editPersonPage)))
 	mux.Handle("GET /children/delete/{id}", AuthHandler(ContextFunc(deletePerson)))
@@ -214,18 +212,6 @@ func RegisterChildrenPage(mux *http.ServeMux) {
 	mux.Handle("GET /person/{id}", PublicHandler(ContextFunc(personPage)))
 }
 
-func peoplePage(context ResponseContext) {
-	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateWithData(context, "children", map[string]any{
-			"People": GetAllPeople(tx),
-		})
-	})
-}
-func personAdminPage(context ResponseContext) {
-	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateBlock(context, "children", "childrenAdmin", GetAllPeople(tx))
-	})
-}
 func addPersonPage(context ResponseContext) {
 	RenderTemplate(context, "children-add")
 }
@@ -246,7 +232,7 @@ func deletePerson(context ResponseContext) {
 		vbolt.TxCommit(tx)
 	})
 
-	http.Redirect(context.w, context.r, "/children", http.StatusFound)
+	http.Redirect(context.w, context.r, "/", http.StatusFound)
 }
 func savePerson(context ResponseContext) {
 	context.r.ParseForm()
@@ -275,7 +261,7 @@ func savePerson(context ResponseContext) {
 		vbolt.TxCommit(tx)
 	})
 
-	http.Redirect(context.w, context.r, "/children", http.StatusFound)
+	http.Redirect(context.w, context.r, "/", http.StatusFound)
 }
 
 func createFamilyPage(context ResponseContext) {
@@ -319,7 +305,7 @@ func saveFamily(context ResponseContext) {
 		vbolt.TxCommit(tx)
 	})
 
-	http.Redirect(context.w, context.r, "/children", http.StatusFound)
+	http.Redirect(context.w, context.r, "/", http.StatusFound)
 }
 
 func personPage(context ResponseContext) {
