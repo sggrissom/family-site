@@ -318,6 +318,7 @@ func personPage(context ResponseContext) {
 		if person.ImageId > 0 {
 			vbolt.Read(tx, ImageBucket, person.ImageId, &image)
 		}
+		context.familyId = person.FamilyId
 		RenderTemplateWithData(context, "person", map[string]any{
 			"Person": person,
 			"Image":  image,

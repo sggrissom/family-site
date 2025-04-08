@@ -22,10 +22,11 @@ var db *vbolt.DB
 var Info vbolt.Info // define once
 
 type ResponseContext struct {
-	w       http.ResponseWriter
-	r       *http.Request
-	user    User
-	isAdmin bool
+	w        http.ResponseWriter
+	r        *http.Request
+	user     User
+	isAdmin  bool
+	familyId int
 }
 
 type ContextFunc func(ResponseContext)
@@ -173,7 +174,6 @@ func internalRenderTemplateWithData(context ResponseContext, templateNames []str
 			return
 		}
 	}
-
 	if context.user.Id != 0 {
 		data["Username"] = context.user.Email
 		data["UserId"] = context.user.Id
@@ -181,6 +181,18 @@ func internalRenderTemplateWithData(context ResponseContext, templateNames []str
 		if context.isAdmin {
 			data["isAdmin"] = true
 		}
+	}
+
+	if context.familyId != 0 {
+		var family Family
+		vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+			family = getFamily(tx, context.familyId)
+			for _, id := range family.OwningUsers {
+				if id == context.user.Id {
+					data["Owner"] = true
+				}
+			}
+		})
 	}
 
 	err = tmpl.Execute(context.w, data)
@@ -291,6 +303,13 @@ func RenderTemplateBlock(context ResponseContext, templateName string, blockName
 }
 
 func PublicHandler(next ContextFunc) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		context := BuildResponseContext(w, r)
+		next(context)
+	})
+}
+
+func OwnerHandler(next ContextFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		context := BuildResponseContext(w, r)
 		next(context)
