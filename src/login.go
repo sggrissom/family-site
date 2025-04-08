@@ -232,8 +232,11 @@ func RegisterLoginPages(mux *http.ServeMux) {
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		RedirectURL:  os.Getenv("SITE_ROOT") + "/google/callback",
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
-		Endpoint:     google.Endpoint,
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		},
+		Endpoint: google.Endpoint,
 	}
 	token, err := generateToken(20)
 	if err != nil {
@@ -499,6 +502,11 @@ func googleLogin(context ResponseContext) {
 type UserInfo struct {
 	Email         string `json:"email"`
 	VerifiedEmail bool   `json:"verified_email"`
+	Name          string `json:"name"`
+	GivenName     string `json:"given_name"`
+	FamilyName    string `json:"family_name"`
+	Picture       string `json:"picture"`
+	Locale        string `json:"locale"`
 }
 
 func googleCallback(ctx ResponseContext) {
@@ -534,6 +542,21 @@ func googleCallback(ctx ResponseContext) {
 	})
 	if userId > 0 {
 		authenticateForUser(userId, ctx.w)
+	} else {
+		addUserRequest := AddUserRequest{
+			Email:     userInfo.Email,
+			FirstName: userInfo.GivenName,
+			LastName:  userInfo.FamilyName,
+		}
+
+		var user User
+		vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
+			user = AddUserTx(tx, addUserRequest, []byte{})
+			vbolt.TxCommit(tx)
+		})
+		if user.Id > 0 {
+			authenticateForUser(user.Id, ctx.w)
+		}
 	}
 
 	http.Redirect(ctx.w, ctx.r, "/", http.StatusFound)

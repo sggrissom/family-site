@@ -17,7 +17,9 @@
 <div style="margin-top: 15px;">
     <a href="/login/google" style="font-size: small;">Login with Google</a>
 </div>
+{{ end }}
 
+{{ define "js" }}
 <script>
   const emailInput = document.getElementById("email");
   const forgotLink = document.getElementById("forgotLink");
@@ -27,5 +29,4 @@
       forgotLink.href = "/forgot?email=" + email;
   });
 </script>
-
 {{ end }}
