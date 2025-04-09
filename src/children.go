@@ -201,12 +201,12 @@ func CalculateAge(birthday time.Time, includeMonths bool) string {
 
 func RegisterChildrenPage(mux *http.ServeMux) {
 	mux.Handle("GET /children/add", AuthHandler(ContextFunc(addPersonPage)))
-	mux.Handle("GET /children/add/{id}", PublicHandler(ContextFunc(editPersonPage)))
+	mux.Handle("GET /children/add/{id}", OwnerHandler(ContextFunc(editPersonPage)))
 	mux.Handle("GET /children/delete/{id}", AuthHandler(ContextFunc(deletePerson)))
 	mux.Handle("POST /children/add", AuthHandler(ContextFunc(savePerson)))
 
 	mux.Handle("GET /family/create", AuthHandler(ContextFunc(createFamilyPage)))
-	mux.Handle("GET /family/edit/{id}", AuthHandler(ContextFunc(editFamilyPage)))
+	mux.Handle("GET /family/edit/{id}", OwnerHandler(ContextFunc(editFamilyPage)))
 	mux.Handle("POST /family/create", AuthHandler(ContextFunc(saveFamily)))
 
 	mux.Handle("GET /person/{id}", PublicHandler(ContextFunc(personPage)))
@@ -219,8 +219,10 @@ func editPersonPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		id := context.r.PathValue("id")
 		idVal, _ := strconv.Atoi(id)
+		person := getPerson(tx, idVal)
+		context.familyId = person.FamilyId
 		RenderTemplateWithData(context, "children-add", map[string]any{
-			"Person": getPerson(tx, idVal),
+			"Person": person,
 		})
 	})
 }
@@ -271,6 +273,7 @@ func editFamilyPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		id := context.r.PathValue("id")
 		idVal, _ := strconv.Atoi(id)
+		context.familyId = idVal
 		RenderTemplateWithData(context, "family-create", map[string]any{
 			"Family": getFamily(tx, idVal),
 		})

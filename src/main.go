@@ -22,11 +22,12 @@ var db *vbolt.DB
 var Info vbolt.Info // define once
 
 type ResponseContext struct {
-	w        http.ResponseWriter
-	r        *http.Request
-	user     User
-	isAdmin  bool
-	familyId int
+	w               http.ResponseWriter
+	r               *http.Request
+	user            User
+	isAdmin         bool
+	familyId        int
+	mustAdminFamily bool
 }
 
 type ContextFunc func(ResponseContext)
@@ -189,10 +190,15 @@ func internalRenderTemplateWithData(context ResponseContext, templateNames []str
 			family = getFamily(tx, context.familyId)
 			for _, id := range family.OwningUsers {
 				if id == context.user.Id {
-					data["Owner"] = true
+					data["isOwner"] = true
 				}
 			}
 		})
+	}
+
+	if context.mustAdminFamily && data["isOwner"] != true {
+		http.Error(context.w, "not a family owner", http.StatusInternalServerError)
+		return
 	}
 
 	err = tmpl.Execute(context.w, data)
@@ -312,6 +318,7 @@ func PublicHandler(next ContextFunc) http.Handler {
 func OwnerHandler(next ContextFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		context := BuildResponseContext(w, r)
+		context.mustAdminFamily = true
 		next(context)
 	})
 }
