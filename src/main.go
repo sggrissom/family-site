@@ -296,6 +296,10 @@ func BuildResponseContext(w http.ResponseWriter, r *http.Request) (context Respo
 		parseRefreshToken(&context)
 	}
 
+	if context.user.Id > 0 {
+		context.familyId = context.user.PrimaryFamilyId
+	}
+
 	return
 }
 

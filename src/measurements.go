@@ -206,15 +206,15 @@ func RegisterMeasurementsPages(mux *http.ServeMux) {
 
 func mainHeightsPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateWithData(context, "height", map[string]interface{}{
-			"People": GetAllPeople(tx),
+		RenderTemplateWithData(context, "height", map[string]any{
+			"People": getPeopleInFamily(tx, context.user.PrimaryFamilyId),
 		})
 	})
 }
 func mainWeightsPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
-		RenderTemplateWithData(context, "weight", map[string]interface{}{
-			"People": GetAllPeople(tx),
+		RenderTemplateWithData(context, "weight", map[string]any{
+			"People": getPeopleInFamily(tx, context.user.PrimaryFamilyId),
 		})
 	})
 }
@@ -222,7 +222,7 @@ func mainWeightsPage(context ResponseContext) {
 func addHeightPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		RenderTemplateWithData(context, "height-add", map[string]interface{}{
-			"People": GetAllPeople(tx),
+			"People": getPeopleInFamily(tx, context.user.PrimaryFamilyId),
 		})
 	})
 }
@@ -257,7 +257,7 @@ func saveHeightPage(context ResponseContext) {
 func addWeightPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		RenderTemplateWithData(context, "weight-add", map[string]interface{}{
-			"People": GetAllPeople(tx),
+			"People": getPeopleInFamily(tx, context.user.PrimaryFamilyId),
 		})
 	})
 }

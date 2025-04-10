@@ -14,6 +14,7 @@ import (
 type Post struct {
 	Id        int
 	PersonId  int
+	FamilyId  int
 	EntryDate time.Time
 
 	Content string
@@ -23,6 +24,7 @@ func PackPost(self *Post, buf *vpack.Buffer) {
 	vpack.Version(1, buf)
 	vpack.Int(&self.Id, buf)
 	vpack.Int(&self.PersonId, buf)
+	vpack.Int(&self.FamilyId, buf)
 	vpack.UnixTime(&self.EntryDate, buf)
 	vpack.String(&self.Content, buf)
 }
@@ -65,7 +67,7 @@ func postsPage(context ResponseContext) {
 func addPostPage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
 		RenderTemplateWithData(context, "posts-add", map[string]interface{}{
-			"People": GetAllPeople(tx),
+			"People": getPeopleInFamily(tx, context.user.PrimaryFamilyId),
 		})
 	})
 }
@@ -75,7 +77,7 @@ func editPostPage(context ResponseContext) {
 		id := context.r.PathValue("id")
 		idVal, _ := strconv.Atoi(id)
 		RenderTemplateWithData(context, "posts-add", map[string]interface{}{
-			"People": GetAllPeople(tx),
+			"People": getPeopleInFamily(tx, context.user.PrimaryFamilyId),
 			"Post":   getPost(tx, idVal),
 		})
 	})
@@ -101,9 +103,15 @@ func savePost(context ResponseContext) {
 
 	entryDateTime, _ := time.Parse("2006-01-02", entryDate)
 
+	var person Person
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		person = getPerson(tx, personId)
+	})
+
 	entry := Post{
 		Id:        id,
 		PersonId:  personId,
+		FamilyId:  person.FamilyId,
 		EntryDate: entryDateTime,
 		Content:   content,
 	}
