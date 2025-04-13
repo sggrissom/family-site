@@ -2,7 +2,7 @@
 {{ define "content" }}
 
 <h2>Register</h2>
-<form method="POST" action="/register">
+<form method="POST" id="registerForm" action="/register">
     <label for="firstname">First Name:</label>
     <input type="firstname" id="firstname" name="firstname" required><br>
     <label for="lastname">Last Name:</label>
@@ -10,7 +10,8 @@
     <label for="email">Email:</label>
     <input type="email" id="email" name="email" required><br>
     <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required><br>
+    <input type="password" id="password" required><br>
+    <input type="hidden" id="hashed-password" name="password"><br>
     <input type="text" class="honeypot" name="honeypot"><br>
     <button type="submit">Create Account</button>
 </form>
@@ -27,4 +28,11 @@
         display: none;
     }
 </style>
+{{ end }}
+
+{{ define "js" }}
+  <script src="/static/js/hash.js"></script>
+  <script>
+    PasswordHasher.registerFormWithPassword("registerForm", "password", "hashed-password")
+  </script>
 {{ end }}
