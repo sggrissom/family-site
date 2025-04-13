@@ -39,6 +39,8 @@ func RegisterImagePages(mux *http.ServeMux) {
 	mux.Handle("POST /post/upload-image", AuthHandler(ContextFunc(uploadImage)))
 	mux.Handle("POST /person/upload/{id}", AuthHandler(ContextFunc(uploadPersonImage)))
 	mux.Handle("GET /person/upload/delete/{id}", AuthHandler(ContextFunc(deletePersonImage)))
+	mux.Handle("POST /family/upload/{id}", AuthHandler(ContextFunc(uploadFamilyImage)))
+	mux.Handle("GET /family/upload/delete/{id}", AuthHandler(ContextFunc(deleteFamilyImage)))
 	mux.Handle("GET /uploads/delete", AuthHandler(ContextFunc(deleteAllImages)))
 	mux.Handle("GET /uploads/{id}", PublicHandler(ContextFunc(serveImage)))
 }
@@ -144,6 +146,32 @@ func uploadPersonImage(context ResponseContext) {
 	http.Redirect(context.w, context.r, "/person/"+id, http.StatusFound)
 }
 
+func uploadFamilyImage(context ResponseContext) {
+	image, err := SaveImageFile(context, "profilePic")
+	if err != nil || image.Id == 0 {
+		http.Error(context.w, "Error saving image", http.StatusBadRequest)
+		return
+	}
+
+	id := context.r.PathValue("id")
+	idVal, _ := strconv.Atoi(id)
+
+	var family Family
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		family = getFamily(tx, idVal)
+		if family.ImageId > 0 {
+			DeleteImageFile(family.ImageId, tx)
+		}
+	})
+	vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
+		family.ImageId = image.Id
+		vbolt.Write(tx, FamilyBucket, idVal, &family)
+		tx.Commit()
+	})
+
+	http.Redirect(context.w, context.r, "/family/edit/"+id, http.StatusFound)
+}
+
 func deleteAllImages(context ResponseContext) {
 	deleteIds := make([]int, 0)
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
@@ -205,4 +233,24 @@ func deletePersonImage(context ResponseContext) {
 	})
 
 	http.Redirect(context.w, context.r, "/person/"+id, http.StatusFound)
+}
+
+func deleteFamilyImage(context ResponseContext) {
+	id := context.r.PathValue("id")
+	idVal, _ := strconv.Atoi(id)
+
+	var family Family
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		family = getFamily(tx, idVal)
+		if family.ImageId > 0 {
+			DeleteImageFile(family.ImageId, tx)
+		}
+	})
+	vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
+		family.ImageId = 0
+		vbolt.Write(tx, FamilyBucket, family.Id, &family)
+		tx.Commit()
+	})
+
+	http.Redirect(context.w, context.r, "/family/edit/"+id, http.StatusFound)
 }

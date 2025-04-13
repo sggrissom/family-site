@@ -30,6 +30,8 @@ const (
 type Family struct {
 	Id          int
 	Name        string
+	Description string
+	ImageId     int
 	OwningUsers []int
 }
 
@@ -70,7 +72,9 @@ func PackFamily(self *Family, buf *vpack.Buffer) {
 	vpack.Version(1, buf)
 	vpack.Int(&self.Id, buf)
 	vpack.String(&self.Name, buf)
+	vpack.String(&self.Description, buf)
 	vpack.Slice(&self.OwningUsers, vpack.Int, buf)
+	vpack.Int(&self.ImageId, buf)
 }
 
 var FamilyBucket = vbolt.Bucket(&Info, "family", vpack.FInt, PackFamily)
@@ -282,11 +286,13 @@ func editFamilyPage(context ResponseContext) {
 func saveFamily(context ResponseContext) {
 	context.r.ParseForm()
 	name := context.r.FormValue("name")
+	description := context.r.FormValue("description")
 	id, _ := strconv.Atoi(context.r.FormValue("id"))
 
 	entry := Family{
 		Name:        name,
 		Id:          id,
+		Description: description,
 		OwningUsers: []int{context.user.Id},
 	}
 

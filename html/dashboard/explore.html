@@ -10,36 +10,15 @@
   </div>
   
   <div class="family-grid">
-    <div class="family-card">
-      <img src="" alt="Family" />
-      <h3>A Family</h3>
-      <p>family description</p>
-    </div>
-    <div class="family-card">
-      <img src="" alt="Family" />
-      <h3>A Family</h3>
-      <p>family description</p>
-    </div>
-    <div class="family-card">
-      <img src="" alt="Family" />
-      <h3>A Family</h3>
-      <p>family description</p>
-    </div>
-    <div class="family-card">
-      <img src="" alt="Family" />
-      <h3>A Family</h3>
-      <p>family description</p>
-    </div>
-    <div class="family-card">
-      <img src="" alt="Family" />
-      <h3>A Family</h3>
-      <p>family description</p>
-    </div>
-    <div class="family-card">
-      <img src="" alt="Family" />
-      <h3>A Family</h3>
-      <p>family description</p>
-    </div>
+    {{ range .Families }}
+        <div class="family-card">
+            {{ if ne .ImageId 0 }}
+                <img src="/uploads/{{ .ImageId }}" alt="Profile Picture of {{ .Name }}">
+            {{ end }}
+            <h3>{{ .Name }}</h3>
+            <p>{{ .Description }}</p>
+        </div>
+    {{ end }}
   </div>
 </div>
 {{ end }}
