@@ -452,7 +452,8 @@ func forgotEmail(context ResponseContext) {
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
 	recipient := accountEmail
-	resetLink := "https://grissom.zone/reset-password?token=" + token
+
+	resetLink := os.Getenv("SITE_ROOT") + "/reset-password?token=" + token
 
 	message := []byte("Subject: Reset Your Password\r\n" +
 		"\r\n" +
