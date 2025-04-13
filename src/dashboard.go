@@ -12,6 +12,7 @@ func RegisterDashboardPages(mux *http.ServeMux) {
 	mux.Handle("/", PublicHandler(ContextFunc(rootPage)))
 	mux.Handle("GET /family-list", AuthHandler(ContextFunc(familiesPage)))
 	mux.Handle("GET /family/favorite/{id}", AuthHandler(ContextFunc(favoriteFamily)))
+	mux.Handle("GET /explore", PublicHandler(ContextFunc(explorePage)))
 }
 
 func rootPage(context ResponseContext) {
@@ -63,4 +64,8 @@ func favoriteFamily(context ResponseContext) {
 	})
 
 	http.Redirect(context.w, context.r, "/", http.StatusFound)
+}
+
+func explorePage(context ResponseContext) {
+	RenderTemplateWithData(context, "explore", map[string]any{})
 }
