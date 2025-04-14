@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -15,6 +16,7 @@ func RegisterAdminPages(mux *http.ServeMux) {
 	mux.Handle("GET /admin/people", AdminHandler(ContextFunc(peopleAdminPage)))
 	mux.Handle("GET /admin/user/delete/{id}", AdminHandler(ContextFunc(deleteUserId)))
 	mux.Handle("GET /admin/user/delete", AdminHandler(ContextFunc(deleteUsersBulk)))
+	mux.Handle("GET /admin/user/make-owner/{id}", AdminHandler(ContextFunc(makeUserOwner)))
 }
 
 func adminPage(context ResponseContext) {
@@ -73,6 +75,28 @@ func deleteUsersBulk(context ResponseContext) {
 			return
 		}
 		DeleteUser(db, idVal)
+	}
+
+	http.Redirect(context.w, context.r, "/admin/users", http.StatusFound)
+}
+
+func makeUserOwner(context ResponseContext) {
+	id := context.r.PathValue("id")
+	userId, _ := strconv.Atoi(id)
+
+	id = context.r.URL.Query().Get("familyId")
+	familyId, _ := strconv.Atoi(id)
+
+	var family Family
+	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
+		family = getFamily(tx, familyId)
+	})
+	if !slices.Contains(family.OwningUsers, userId) {
+		family.OwningUsers = append(family.OwningUsers, userId)
+		vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
+			vbolt.Write(tx, FamilyBucket, family.Id, &family)
+			tx.Commit()
+		})
 	}
 
 	http.Redirect(context.w, context.r, "/admin/users", http.StatusFound)

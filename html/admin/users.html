@@ -47,6 +47,7 @@
             <option value="">Select Action</option>
             <option value="reset">Reset Password</option>
             <option value="login">Log In as This User</option>
+            <option value="make-owner">Grant Ownership</option>
             <option value="delete">Delete User</option>
           </select>
           <button class="apply-action" data-userid="{{.Id}}">Go</button>
@@ -99,6 +100,13 @@
         }
         if (action == "delete") {
           window.location.href = '/admin/user/delete/' + userId;
+          return;
+        }
+        if (action == "make-owner") {
+          var familyId = window.prompt("Enter the Family ID for granting access to this user:");
+          if (familyId) {
+            window.location.href = '/admin/user/make-owner/' + userId + '?familyId=' + encodeURIComponent(familyId);
+          }
           return;
         }
         alert('Performing "' + action + '" for user ' + userId);
