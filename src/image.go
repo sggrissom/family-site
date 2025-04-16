@@ -12,13 +12,18 @@ import (
 
 	"go.hasen.dev/vbolt"
 	"go.hasen.dev/vpack"
+
+	"image/jpeg"
+
+	"github.com/disintegration/imaging"
 )
 
 type Image struct {
-	Id       int
-	OwnerId  int
-	FamilyId int
-	Filename string
+	Id             int
+	OwnerId        int
+	FamilyId       int
+	Filename       string
+	Small_Filename string
 }
 
 func PackImage(self *Image, buf *vpack.Buffer) {
@@ -27,6 +32,7 @@ func PackImage(self *Image, buf *vpack.Buffer) {
 	vpack.Int(&self.OwnerId, buf)
 	vpack.Int(&self.FamilyId, buf)
 	vpack.String(&self.Filename, buf)
+	vpack.String(&self.Small_Filename, buf)
 }
 
 var ImageBucket = vbolt.Bucket(&Info, "image", vpack.FInt, PackImage)
@@ -77,12 +83,32 @@ func SaveImageFile(context ResponseContext, fileParameter string) (image Image, 
 		return image, err
 	}
 
+	origImage, err := imaging.Open(buildPath(filename))
+	if err != nil {
+		return image, err
+	}
+
+	resizedImage := imaging.Thumbnail(origImage, 150, 150, imaging.Lanczos)
+
+	smallFilename := fmt.Sprintf("small-%s", filename)
+	smallFile, err := os.Create(buildPath(smallFilename))
+	if err != nil {
+		return image, err
+	}
+	defer smallFile.Close()
+
+	opts := jpeg.Options{Quality: 80}
+	if err := jpeg.Encode(smallFile, resizedImage, &opts); err != nil {
+		return image, err
+	}
+
 	vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
 		image = Image{
-			Id:       vbolt.NextIntId(tx, ImageBucket),
-			OwnerId:  context.user.Id,
-			FamilyId: context.user.PrimaryFamilyId,
-			Filename: filename,
+			Id:             vbolt.NextIntId(tx, ImageBucket),
+			OwnerId:        context.user.Id,
+			FamilyId:       context.user.PrimaryFamilyId,
+			Filename:       filename,
+			Small_Filename: smallFilename,
 		}
 
 		SaveImage(tx, &image)
@@ -98,6 +124,11 @@ func DeleteImageFile(imageId int, readTx *vbolt.Tx) (err error) {
 
 	if err := os.Remove(buildPath(image.Filename)); err != nil {
 		return err
+	}
+	if len(image.Small_Filename) > 0 {
+		if err := os.Remove(buildPath(image.Small_Filename)); err != nil {
+			return err
+		}
 	}
 
 	vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
@@ -180,6 +211,12 @@ func deleteAllImages(context ResponseContext) {
 			if err != nil {
 				http.Error(context.w, err.Error(), http.StatusBadRequest)
 			}
+			if len(value.Small_Filename) > 0 {
+				err = os.Remove(buildPath(value.Small_Filename))
+				if err != nil {
+					http.Error(context.w, err.Error(), http.StatusBadRequest)
+				}
+			}
 			deleteIds = append(deleteIds, key)
 			return true
 		})
@@ -204,7 +241,11 @@ func serveImage(context ResponseContext) {
 		vbolt.Read(tx, ImageBucket, idVal, &image)
 
 		if image.OwnerId == context.user.Id {
-			filePath = buildPath(image.Filename)
+			if len(image.Small_Filename) > 0 {
+				filePath = buildPath(image.Small_Filename)
+			} else {
+				filePath = buildPath(image.Filename)
+			}
 		}
 	})
 
