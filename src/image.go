@@ -18,12 +18,22 @@ import (
 	"github.com/disintegration/imaging"
 )
 
+type AccessLevel int
+
+const (
+	OwnerLevel AccessLevel = iota
+	FamilyLevel
+	ViewerLevel
+	PublicLevel
+)
+
 type Image struct {
 	Id             int
 	OwnerId        int
 	FamilyId       int
 	Filename       string
 	Small_Filename string
+	Access         AccessLevel
 }
 
 func PackImage(self *Image, buf *vpack.Buffer) {
@@ -33,6 +43,7 @@ func PackImage(self *Image, buf *vpack.Buffer) {
 	vpack.Int(&self.FamilyId, buf)
 	vpack.String(&self.Filename, buf)
 	vpack.String(&self.Small_Filename, buf)
+	vpack.IntEnum(&self.Access, buf)
 }
 
 var ImageBucket = vbolt.Bucket(&Info, "image", vpack.FInt, PackImage)
@@ -55,7 +66,7 @@ func buildPath(filename string) (path string) {
 	return filepath.Join("uploads", filename)
 }
 
-func SaveImageFile(context ResponseContext, fileParameter string) (image Image, err error) {
+func SaveImageFile(context ResponseContext, fileParameter string, access AccessLevel) (image Image, err error) {
 	context.r.Body = http.MaxBytesReader(context.w, context.r.Body, 10<<23)
 
 	if err := context.r.ParseMultipartForm(10 << 23); err != nil {
@@ -109,6 +120,7 @@ func SaveImageFile(context ResponseContext, fileParameter string) (image Image, 
 			FamilyId:       context.user.PrimaryFamilyId,
 			Filename:       filename,
 			Small_Filename: smallFilename,
+			Access:         access,
 		}
 
 		SaveImage(tx, &image)
@@ -140,7 +152,7 @@ func DeleteImageFile(imageId int, readTx *vbolt.Tx) (err error) {
 }
 
 func uploadImage(context ResponseContext) {
-	image, err := SaveImageFile(context, "image")
+	image, err := SaveImageFile(context, "image", FamilyLevel)
 	if err != nil {
 		http.Error(context.w, "Error saving image", http.StatusBadRequest)
 		return
@@ -152,7 +164,7 @@ func uploadImage(context ResponseContext) {
 }
 
 func uploadPersonImage(context ResponseContext) {
-	image, err := SaveImageFile(context, "profilePic")
+	image, err := SaveImageFile(context, "profilePic", FamilyLevel)
 	if err != nil || image.Id == 0 {
 		http.Error(context.w, "Error saving image", http.StatusBadRequest)
 		return
@@ -178,7 +190,7 @@ func uploadPersonImage(context ResponseContext) {
 }
 
 func uploadFamilyImage(context ResponseContext) {
-	image, err := SaveImageFile(context, "profilePic")
+	image, err := SaveImageFile(context, "profilePic", PublicLevel)
 	if err != nil || image.Id == 0 {
 		http.Error(context.w, "Error saving image", http.StatusBadRequest)
 		return
@@ -236,18 +248,22 @@ func serveImage(context ResponseContext) {
 	idVal, _ := strconv.Atoi(id)
 	filePath := ""
 
+	var image Image
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
-		var image Image
 		vbolt.Read(tx, ImageBucket, idVal, &image)
-
-		if image.OwnerId == context.user.Id {
-			if len(image.Small_Filename) > 0 {
-				filePath = buildPath(image.Small_Filename)
-			} else {
-				filePath = buildPath(image.Filename)
-			}
+		if len(image.Small_Filename) > 0 {
+			filePath = buildPath(image.Small_Filename)
+		} else {
+			filePath = buildPath(image.Filename)
 		}
 	})
+
+	if image.Access == OwnerLevel && image.OwnerId != context.user.Id {
+		filePath = ""
+	}
+	if image.Access == FamilyLevel && image.FamilyId != context.user.PrimaryFamilyId {
+		filePath = ""
+	}
 
 	if filePath == "" {
 		http.Error(context.w, "cannot show image", http.StatusBadRequest)

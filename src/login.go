@@ -29,14 +29,6 @@ var oauthStateString string
 
 // Models
 
-type RoleType int
-
-const (
-	Admin RoleType = iota
-	Owner
-	Viewer
-)
-
 type StatusType int
 
 const (
@@ -47,7 +39,6 @@ const (
 type User struct {
 	Id              int
 	Email           string
-	Role            RoleType
 	Status          StatusType
 	LastLogin       time.Time
 	FirstName       string
@@ -59,7 +50,6 @@ func PackUser(self *User, buf *vpack.Buffer) {
 	vpack.Version(1, buf)
 	vpack.Int(&self.Id, buf)
 	vpack.String(&self.Email, buf)
-	vpack.IntEnum(&self.Role, buf)
 	vpack.IntEnum(&self.Status, buf)
 	vpack.Time(&self.LastLogin, buf)
 	vpack.String(&self.FirstName, buf)
@@ -136,7 +126,6 @@ func AddUserTx(tx *vbolt.Tx, req AddUserRequest, hash []byte) User {
 	user.Id = vbolt.NextIntId(tx, UsersBucket)
 	user.Email = req.Email
 	user.Status = Active
-	user.Role = Viewer
 	user.FirstName = req.FirstName
 	user.LastName = req.LastName
 
