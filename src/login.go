@@ -216,6 +216,8 @@ func RegisterLoginPages(mux *http.ServeMux) {
 	mux.Handle("GET /reset-password-sent", PublicHandler(ContextFunc(resetEmailSent)))
 	mux.Handle("GET /reset-password", PublicHandler(ContextFunc(resetPassword)))
 	mux.Handle("POST /reset-password", PublicHandler(ContextFunc(resetPasswordPost)))
+	mux.Handle("GET /user/edit", AuthHandler(ContextFunc(editUserPage)))
+	mux.Handle("POST /user/edit", AuthHandler(ContextFunc(saveUser)))
 
 	oauthConf = &oauth2.Config{
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
@@ -550,4 +552,23 @@ func googleCallback(ctx ResponseContext) {
 	}
 
 	http.Redirect(ctx.w, ctx.r, "/", http.StatusFound)
+}
+
+func editUserPage(context ResponseContext) {
+	RenderTemplateWithData(context, "edit-profile", map[string]any{
+		"firstname": context.user.FirstName,
+		"lastname":  context.user.LastName,
+	})
+}
+
+func saveUser(context ResponseContext) {
+	context.user.FirstName = context.r.PostFormValue("firstname")
+	context.user.LastName = context.r.PostFormValue("lastname")
+
+	vbolt.WithWriteTx(db, func(tx *vbolt.Tx) {
+		vbolt.Write(tx, UsersBucket, context.user.Id, &context.user)
+		vbolt.TxCommit(tx)
+	})
+
+	http.Redirect(context.w, context.r, "/profile", http.StatusFound)
 }

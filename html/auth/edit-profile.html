@@ -1,0 +1,12 @@
+{{ define "title"}}edit profile{{ end }}
+{{ define "content" }}
+
+<h2>Register</h2>
+<form method="POST" id="editProfile" action="/user/edit">
+    <label for="firstname">First Name:</label>
+    <input type="firstname" id="firstname" name="firstname" required value="{{ .firstname }}"><br>
+    <label for="lastname">Last Name:</label>
+    <input type="lastname" id="lastname" name="lastname" required value="{{ .lastname }}"><br>
+    <button type="submit">Save Account</button>
+</form>
+{{ end }}
