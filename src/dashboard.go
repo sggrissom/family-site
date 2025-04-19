@@ -69,7 +69,7 @@ func favoriteFamily(context ResponseContext) {
 func explorePage(context ResponseContext) {
 	vbolt.WithReadTx(db, func(tx *vbolt.Tx) {
 		RenderTemplateWithData(context, "explore", map[string]any{
-			"Families": GetAllFamilies(tx), //TODO: only public families
+			"Families": GetAllPublicFamilies(tx),
 		})
 	})
 }

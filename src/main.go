@@ -91,6 +91,9 @@ var funcMap = template.FuncMap{
 		}
 		return ""
 	},
+	"formatVisibility": func(visibility VisibilityType) string {
+		return parseVisibilityLabel(visibility)
+	},
 }
 
 var templatePaths map[string]string

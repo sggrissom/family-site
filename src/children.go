@@ -27,12 +27,42 @@ const (
 	Child
 )
 
+type VisibilityType int
+
+const (
+	Hidden VisibilityType = iota
+	Public
+)
+
+func parseVisibilityLabel(t VisibilityType) string {
+	switch t {
+	case Hidden:
+		return "hidden"
+	case Public:
+		return "public"
+	default:
+		return ""
+	}
+}
+
+func parseVisibilityType(s string) (VisibilityType, error) {
+	switch s {
+	case "hidden":
+		return Hidden, nil
+	case "public":
+		return Public, nil
+	default:
+		return 0, fmt.Errorf("unknown visibility type: %s", s)
+	}
+}
+
 type Family struct {
 	Id          int
 	Name        string
 	Description string
 	ImageId     int
 	OwningUsers []int
+	Visibility  VisibilityType
 }
 
 type Person struct {
@@ -75,6 +105,7 @@ func PackFamily(self *Family, buf *vpack.Buffer) {
 	vpack.String(&self.Description, buf)
 	vpack.Slice(&self.OwningUsers, vpack.Int, buf)
 	vpack.Int(&self.ImageId, buf)
+	vpack.IntEnum(&self.Visibility, buf)
 }
 
 var FamilyBucket = vbolt.Bucket(&Info, "family", vpack.FInt, PackFamily)
@@ -87,6 +118,16 @@ func getFamily(tx *vbolt.Tx, id int) (family Family) {
 func GetAllFamilies(tx *vbolt.Tx) (families []Family) {
 	vbolt.IterateAll(tx, FamilyBucket, func(key int, value Family) bool {
 		generic.Append(&families, value)
+		return true
+	})
+	return
+}
+
+func GetAllPublicFamilies(tx *vbolt.Tx) (families []Family) {
+	vbolt.IterateAll(tx, FamilyBucket, func(key int, value Family) bool {
+		if value.Visibility == Public {
+			generic.Append(&families, value)
+		}
 		return true
 	})
 	return
@@ -287,13 +328,23 @@ func saveFamily(context ResponseContext) {
 	context.r.ParseForm()
 	name := context.r.FormValue("name")
 	description := context.r.FormValue("description")
-	id, _ := strconv.Atoi(context.r.FormValue("id"))
+	id, err := strconv.Atoi(context.r.FormValue("id"))
+	if err != nil {
+		http.Error(context.w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	visibility, err := parseVisibilityType(context.r.FormValue("visibility"))
+	if err != nil {
+		http.Error(context.w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	entry := Family{
 		Name:        name,
 		Id:          id,
 		Description: description,
 		OwningUsers: []int{context.user.Id},
+		Visibility:  visibility,
 	}
 
 	var user User
