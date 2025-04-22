@@ -253,6 +253,7 @@ func RegisterChildrenPage(mux *http.ServeMux) {
 	mux.Handle("GET /family/create", AuthHandler(ContextFunc(createFamilyPage)))
 	mux.Handle("GET /family/edit/{id}", OwnerHandler(ContextFunc(editFamilyPage)))
 	mux.Handle("POST /family/create", AuthHandler(ContextFunc(saveFamily)))
+	mux.Handle("POST /family/owner/{id}", OwnerHandler(ContextFunc(addOwnerPost)))
 
 	mux.Handle("GET /person/{id}", PublicHandler(ContextFunc(personPage)))
 }
@@ -384,4 +385,26 @@ func personPage(context ResponseContext) {
 			"Image":  image,
 		})
 	})
+}
+
+func addOwnerPost(context ResponseContext) {
+	var userId int
+	var family Family
+	vbolt.WithReadTx(db, func(tx *bolt.Tx) {
+		id := context.r.PathValue("id")
+		idVal, _ := strconv.Atoi(id)
+		context.familyId = idVal
+		family = getFamily(tx, idVal)
+
+		email := context.r.FormValue("owner")
+		userId = GetUserId(tx, email)
+	})
+	if userId != 0 && family.Id != 0 {
+		family.OwningUsers = append(family.OwningUsers, userId)
+		vbolt.WithWriteTx(db, func(tx *bolt.Tx) {
+			vbolt.Write(tx, FamilyBucket, family.Id, &family)
+			tx.Commit()
+		})
+	}
+	http.Redirect(context.w, context.r, "/", http.StatusFound)
 }

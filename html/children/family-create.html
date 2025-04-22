@@ -27,5 +27,10 @@
             <button type="submit" class="btn-upload">Upload</button>
             <a href="/family/upload/delete/{{ .Family.Id }}" class="btn-delete">Delete</a>
         </form>
+        <form class="add-owner-form" action="/family/owner/{{ .Family.Id }}" method="POST">
+            <label for="owner">Email to make an Owner:</label>
+            <input type="text" name="owner">
+            <button type="submit">Add Owner</button>
+        </form>
     {{ end }}
 {{ end }}
