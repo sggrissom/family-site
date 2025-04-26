@@ -3,6 +3,12 @@ todo.txt
 .env
 uploads/*
 
+.serve
+.stdout
+.stderr
+
+node_modules
+
 # Binaries for programs and plugins
 *.exe
 *.dll
