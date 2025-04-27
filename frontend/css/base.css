@@ -1,0 +1,257 @@
+:root {
+  --primary-color: #6c5ce7;
+  --primary-hover-color: #5f51cf;
+  --secondary-color: #00b894;
+  --accent-hover-color: #02a686;
+  --bg-color: #f4f4f4;
+  --header-bg: #fff;
+  --text-color: #333;
+  --border-color: #ccc;
+  --button-bg: var(--primary-color);
+  --button-hover-bg: #5848c2;
+  --button-text: #fff;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+header {
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+header .logo {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+nav a {
+  margin-left: 15px;
+  text-decoration: none;
+  color: #333;
+  font-size: 1em;
+}
+.container {
+  padding: 40px 20px;
+  text-align: center;
+}
+.hero {
+  background: var(--secondary-color);
+  color: #fff;
+  padding: 60px 20px;
+  text-align: center;
+}
+.hero h1 {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+}
+.hero p {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+.cta-button {
+  background-color: var(--button-bg);
+  color: var(--button-text);
+  border: none;
+  padding: 15px 30px;
+  font-size: 1.1em;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin-top: 10px;
+}
+.cta-button:hover {
+  background-color: var(--button-hover-bg);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.9em;
+  color: #777;
+  background: var(--header-bg);
+  border-top: 1px solid var(--border-color);
+}
+
+header {
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header .logo {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+nav a {
+  margin-left: 15px;
+  text-decoration: none;
+  color: var(--text-color);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border-color);
+}
+th, td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee;
+}
+th {
+  background-color: #f9f9f9;
+  text-align: left;
+}
+tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+a:hover :not(.button), a:hover :not(.cta-button) {
+  text-decoration: underline;
+}
+button,.button {
+   display: inline-block;
+   padding: 0.6rem 1rem;
+   background-color: var(--primary-color);
+   color: #fff;
+   font-size: 0.9rem;
+   text-align: center;
+   text-decoration: none;
+   border-radius: 4px;
+   transition: background-color 0.2s ease;
+ }
+
+ button:hover,.button:hover {
+   background-color: var(--primary-hover-color);
+ }
+
+ .button-secondary {
+   background-color: var(--secondary-color);
+ }
+ .button-secondary:hover {
+   background-color: var(--accent-hover-color);
+ }
+
+ form {
+   max-width: 600px;
+   margin: 1rem auto;
+   background-color: #f9f9f9; 
+   padding: 1.5rem;
+   border-radius: 5px;
+   border: 1px solid #eee;
+ }
+
+ .form-group {
+   margin-bottom: 1rem;
+ }
+
+ .form-group label {
+   display: block;
+   font-weight: bold;
+   margin-bottom: 0.3rem;
+ }
+
+ .form-group input,
+ .form-group select,
+ .form-group textarea {
+   padding: 0.6rem;
+   border: 1px solid #ccc;
+   border-radius: 4px;
+   font-size: 1rem;
+   font-family: inherit;
+ }
+
+/* A simple card layout for stats/overview */
+.info-cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.info-card {
+  background-color: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  flex: 1 1 200px;
+  padding: 20px;
+  text-align: center;
+}
+
+.info-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+}
+
+.info-card p {
+  margin: 0;
+  font-size: 1.4em;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.profile-picture {
+    width: 100px;
+    height: 100px;
+    margin-right: 20px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.profile-picture img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholder-picture {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: #aaa;
+    font-size: 2em;
+    color: #fff;
+}
+
+.hero {
+  position: relative;
+  background: linear-gradient(135deg, var(--secondary-color) 30%, #b2f2bb 100%);
+  min-height: 60vh;
+}
+
+.hero-content {
+  background-color: #fff;
+  color: var(--text-color);
+  max-width: 600px;
+  padding: 40px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.hero-content h1 {
+  margin-top: 0;
+}

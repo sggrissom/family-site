@@ -42,6 +42,7 @@ var FEOpts = esbuilder.FEBuildOptions{
 	EntryHTML: []string{"index.html"},
 	CopyItems: []string{
 		"images",
+		"css",
 	},
 	Outdir: FEDist,
 	Define: map[string]string{
@@ -54,6 +55,7 @@ var FEOpts = esbuilder.FEBuildOptions{
 var FEWatchDirs = []string{
 	"frontend",
 	"frontend/images",
+	"frontend/css",
 }
 
 func main() {
