@@ -8,16 +8,39 @@ export async function fetch(route: string, prefix: string) {
 }
 
 export function view(route: string, prefix: string, data: Data): preact.ComponentChild {
-    return <HeroSection/>
+    return <>
+        <Header /><HeroSection /><Footer />
+    </>
 }
 
 const HeroSection = () => {
-  return (
-    <div className="hero">
-      <h1>Welcome to a Family Site</h1>
-      <p style={{ marginBottom: '40px' }}>Track some family stuff.</p>
-      <a className="cta-button" href="/register">Get Started</a>
-      <a className="cta-button" href="/explore">Explore</a>
-    </div>
-  );
+    return (
+        <div className="hero">
+            <h1>Welcome to a Family Site</h1>
+            <p style={{ marginBottom: '40px' }}>Track some family stuff.</p>
+            <a className="cta-button" href="/register">Get Started</a>
+            <a className="cta-button" href="/explore">Explore</a>
+        </div>
+    );
 };
+
+const Header = () => {
+    return (
+        <header>
+            <div className="logo">Family Site</div>
+            <nav>
+                <a href="/explore">Explore</a>
+                <a href="/login">Log In</a>
+                <a href="/register">Sign Up</a>
+            </nav>
+        </header>
+    );
+};
+
+const Footer = () => {
+    return (
+        <footer>
+            &copy; 2024 Family Site
+        </footer>
+    )
+}
