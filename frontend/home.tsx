@@ -24,7 +24,7 @@ const HeroSection = () => {
     );
 };
 
-const Header = () => {
+export const Header = () => {
     return (
         <header>
             <div className="logo">Family Site</div>
@@ -37,7 +37,7 @@ const Header = () => {
     );
 };
 
-const Footer = () => {
+export const Footer = () => {
     return (
         <footer>
             &copy; 2024 Family Site
