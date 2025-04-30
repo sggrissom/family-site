@@ -21,7 +21,11 @@ const useForm = vlens.declareHook((data: server.FamilyListResponse): Form => ({
 export function view(route: string, prefix: string, data: server.FamilyListResponse): preact.ComponentChild {
     let form = useForm(data)
     return <>
-        <Header /><Families form={form}/><Footer />
+        <Header />
+        <div className={"container"}>
+            <Families form={form}/>
+        </div>
+        <Footer />
     </>
 }
 
