@@ -1,68 +1,97 @@
 import * as preact from "preact"
 import { Footer, Header } from "home";
-import * as rpc from "vlens/rpc";
+import * as vlens from "vlens";
+import * as server from "@app/server";
 
-type Data = {}
-
-export async function fetch(route: string, prefix: string) {
-    return rpc.ok<Data>({})
+type Form = {
+    users: server.User[]
+    first: string
+    last: string
+    email: string
+    password: string
+    error: string
 }
 
+const useForm = vlens.declareHook((data: server.UserListResponse): Form => ({
+    users: data.Users, first: "", last: "", email:"", password: "", error: ""
+}))
 
-export function view(route: string, prefix: string, data: Data): preact.ComponentChild {
+export async function fetch(route: string, prefix: string) {
+    return server.ListUsers({})
+}
+
+export function view(route: string, prefix: string, data: server.UserListResponse): preact.ComponentChild {
+    let form = useForm(data)
     return <>
         <Header />
         <div className={"container"}>
-            <RegisterForm/>
+            <h3>Users</h3>
+            {form.users.map(user => <div key={user.Id}><a href={`/post?user_id=${user.Id}`}>{user.Email}</a></div>)}
+            <RegisterForm form={form}/>
         </div>
         <Footer />
     </>
 }
 
-const handleSubmit = (e: Event) => {
-    e.preventDefault();
-};
+async function onAddUserClicked(form: Form, event: Event) {
+    event.preventDefault()
+    let [resp, err] = await server.AddUser({
+        Email: form.email,
+        Password: form.password,
+        FirstName: form.first,
+        LastName: form.last,
+    })
+    if (resp) {
+        form.first = ""
+        form.last = ""
+        form.password = ""
+        form.email = ""
+        form.users = resp.Users
+        form.error = ""
+    } else {
+        form.error = err
+    }
+    vlens.scheduleRedraw()
+}
 
-const RegisterForm = () => {
+const RegisterForm = ({form}: {form: Form}) => {
     return (
         <div>
             <h2>Register</h2>
-            <form onSubmit={handleSubmit}>
-                <label htmlFor="firstname">First Name:</label>
+            {form.error ?? form.error}
+            <form onSubmit={vlens.cachePartial(onAddUserClicked, form)} >
+                <label htmlFor="first">First Name:</label>
                 <input
-                    type="text"
-                    id="firstname"
-                    name="firstname"
-                    value={""}
+                    type="text" 
+                    id="first"
+                    {...vlens.attrsBindInput(vlens.ref(form, "first"))}
                     required
                 />
                 <br />
 
-                <label htmlFor="lastname">Last Name:</label>
+                <label htmlFor="last">Last Name:</label>
                 <input
-                    type="text"
-                    id="lastname"
-                    name="lastname"
-                    value={""}
+                    type="text" 
+                    id="last"
+                    {...vlens.attrsBindInput(vlens.ref(form, "last"))}
                     required
                 />
                 <br />
 
                 <label htmlFor="email">Email:</label>
                 <input
-                    type="email"
+                    type="email" 
                     id="email"
-                    name="email"
-                    value={""}
+                    {...vlens.attrsBindInput(vlens.ref(form, "email"))}
                     required
                 />
                 <br />
 
                 <label htmlFor="password">Password:</label>
                 <input
-                    type="password"
+                    type="password" 
                     id="password"
-                    value={""}
+                    {...vlens.attrsBindInput(vlens.ref(form, "password"))}
                     required
                 />
                 <br />
@@ -75,7 +104,7 @@ const RegisterForm = () => {
                 />
                 <br />
 
-                <button type="submit">Create Account</button>
+                <button onClick={vlens.cachePartial(onAddUserClicked, form)}>Create Account</button>
             </form>
             <a href="/login">Already have an account?</a>
 

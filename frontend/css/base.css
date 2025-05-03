@@ -251,3 +251,7 @@ button,.button {
 .hero-content h1 {
   margin-top: 0;
 }
+
+.honeypot {
+    display: none;
+}
