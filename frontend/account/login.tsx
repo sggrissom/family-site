@@ -17,7 +17,7 @@ export async function fetch(route: string, prefix: string) {
     return vlens.rpcOk({})
 }
 
-export function view(route: string, prefix: string, data: server.LoginResponse): preact.ComponentChild {
+export function view(route: string, prefix: string, data: server.Empty): preact.ComponentChild {
     let form = useForm()
     return <>
         <Header />
@@ -28,15 +28,27 @@ export function view(route: string, prefix: string, data: server.LoginResponse):
     </>
 }
 
+const nativeFetch = window.fetch.bind(window);
 async function onLoginClicked(form: Form, event: Event) {
     event.preventDefault()
-    let [resp, err] = await server.AuthUser({
-        Email: form.email,
-        Password: form.password,
-    })
-    if (!resp) {
-        form.error = err
+
+    const res = await nativeFetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': ' application/json'
+        },
+        body: JSON.stringify(form)
+      });
+
+    if (!res.ok) {
+        form.error = "login failure"
     }
+
+    const result = await res.json()
+    if (result.Success) {
+        console.log("success")
+    }
+
     vlens.scheduleRedraw()
 }
 

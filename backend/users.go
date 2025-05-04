@@ -13,7 +13,6 @@ import (
 
 func RegisterUserMethods(app *vbeam.Application) {
 	vbeam.RegisterProc(app, AddUser)
-	vbeam.RegisterProc(app, AuthUser)
 }
 
 type AddUserRequest struct {
@@ -33,7 +32,6 @@ type UserListResponse struct {
 
 type LoginResponse struct {
 	Success bool
-	Token   string
 }
 
 type User struct {
@@ -144,28 +142,5 @@ func AddUser(ctx *vbeam.Context, req AddUserRequest) (resp UserListResponse, err
 
 	vbolt.TxCommit(ctx.Tx)
 
-	return
-}
-
-func AuthUser(ctx *vbeam.Context, req AuthRequest) (resp LoginResponse, err error) {
-	userId := GetUserId(ctx.Tx, req.Email)
-	user := GetUser(ctx.Tx, userId)
-	passHash := GetPassHash(ctx.Tx, userId)
-
-	err = bcrypt.CompareHashAndPassword(passHash, []byte(req.Password))
-
-	if err != nil {
-		resp.Success = false
-		return
-	}
-
-	token, err := generateAuthJwt(ctx, user)
-	if err != nil {
-		resp.Success = false
-		return
-	}
-
-	resp.Success = true
-	resp.Token = token
 	return
 }
