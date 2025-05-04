@@ -4,7 +4,6 @@ import * as vlens from "vlens";
 import * as server from "@app/server";
 
 type Form = {
-    users: server.User[]
     first: string
     last: string
     email: string
@@ -12,21 +11,19 @@ type Form = {
     error: string
 }
 
-const useForm = vlens.declareHook((data: server.UserListResponse): Form => ({
-    users: data.Users, first: "", last: "", email:"", password: "", error: ""
+const useForm = vlens.declareHook((): Form => ({
+    first: "", last: "", email:"", password: "", error: ""
 }))
 
 export async function fetch(route: string, prefix: string) {
-    return server.ListUsers({})
+    return vlens.rpcOk({})
 }
 
 export function view(route: string, prefix: string, data: server.UserListResponse): preact.ComponentChild {
-    let form = useForm(data)
+    let form = useForm()
     return <>
         <Header />
         <div className={"container"}>
-            <h3>Users</h3>
-            {form.users.map(user => <div key={user.Id}><a href={`/post?user_id=${user.Id}`}>{user.Email}</a></div>)}
             <RegisterForm form={form}/>
         </div>
         <Footer />
@@ -46,7 +43,6 @@ async function onAddUserClicked(form: Form, event: Event) {
         form.last = ""
         form.password = ""
         form.email = ""
-        form.users = resp.Users
         form.error = ""
     } else {
         form.error = err

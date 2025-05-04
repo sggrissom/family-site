@@ -5,12 +5,16 @@ import (
 	"family/db"
 	"time"
 
-	"go.hasen.dev/generic"
 	"go.hasen.dev/vbeam"
 	"go.hasen.dev/vbolt"
 	"go.hasen.dev/vpack"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func RegisterUserMethods(app *vbeam.Application) {
+	vbeam.RegisterProc(app, AddUser)
+	vbeam.RegisterProc(app, AuthUser)
+}
 
 type AddUserRequest struct {
 	Email     string
@@ -19,16 +23,17 @@ type AddUserRequest struct {
 	LastName  string
 }
 
-type UserListResponse struct {
-	Users []User
+type AuthRequest struct {
+	Email    string
+	Password string
 }
 
-func fetchUsers(tx *vbolt.Tx) (users []User) {
-	vbolt.IterateAll(tx, UsersBkt, func(key int, value User) bool {
-		generic.Append(&users, value)
-		return true
-	})
-	return
+type UserListResponse struct {
+}
+
+type LoginResponse struct {
+	Success bool
+	Token   string
 }
 
 type User struct {
@@ -61,12 +66,44 @@ var PasswdBkt = vbolt.Bucket(&db.Info, "passwd", vpack.FInt, vpack.ByteSlice)
 // username => userid
 var EmailBkt = vbolt.Bucket(&db.Info, "email", vpack.StringZ, vpack.Int)
 
+// token => user id
+var ResetPasswordBucket = vbolt.Bucket(&db.Info, "password-token", vpack.String, vpack.FInt)
+
+// token => user id
+var RefreshBucket = vbolt.Bucket(&db.Info, "login-token", vpack.String, vpack.FInt)
+
 func isPasswordValid(pwd string) bool {
 	return len(pwd) >= 8 && len(pwd) <= 72
 }
 
-var EmailTaken = errors.New("EmailTaken")
-var PasswordInvalid = errors.New("PasswordInvalid")
+var ErrEmailTaken = errors.New("EmailTaken")
+var ErrPasswordInvalid = errors.New("PasswordInvalid")
+
+func GetUserId(tx *vbolt.Tx, username string) (userId int) {
+	vbolt.Read(tx, EmailBkt, username, &userId)
+	return
+}
+
+func GetUser(tx *vbolt.Tx, userId int) (user User) {
+	vbolt.Read(tx, UsersBkt, userId, &user)
+	return
+}
+
+func GetPassHash(tx *vbolt.Tx, userId int) (hash []byte) {
+	vbolt.Read(tx, PasswdBkt, userId, &hash)
+	return
+}
+
+func GetUserIdFromToken(tx *vbolt.Tx, token string) (userId int) {
+	vbolt.Read(tx, ResetPasswordBucket, token, &userId)
+	return
+}
+
+func GetUserIdFromRefreshToken(tx *vbolt.Tx, token string) (userId int) {
+	vbolt.Read(tx, RefreshBucket, token, &userId)
+	vbolt.Delete(tx, RefreshBucket, token)
+	return
+}
 
 func AddUserTx(tx *vbolt.Tx, req AddUserRequest, hash []byte) User {
 	var user User
@@ -84,11 +121,11 @@ func AddUserTx(tx *vbolt.Tx, req AddUserRequest, hash []byte) User {
 
 func ValidateUserTx(tx *vbolt.Tx, req AddUserRequest) error {
 	if vbolt.HasKey(tx, EmailBkt, req.Email) {
-		return EmailTaken
+		return ErrEmailTaken
 	}
 
 	if !isPasswordValid(req.Password) {
-		return PasswordInvalid
+		return ErrPasswordInvalid
 	}
 
 	return nil
@@ -105,16 +142,30 @@ func AddUser(ctx *vbeam.Context, req AddUserRequest) (resp UserListResponse, err
 	vbeam.UseWriteTx(ctx)
 	AddUserTx(ctx.Tx, req, hash)
 
-	resp.Users = fetchUsers(ctx.Tx)
-	generic.EnsureSliceNotNil(&resp.Users)
-
 	vbolt.TxCommit(ctx.Tx)
 
 	return
 }
 
-func ListUsers(ctx *vbeam.Context, req Empty) (resp UserListResponse, err error) {
-	resp.Users = fetchUsers(ctx.Tx)
-	generic.EnsureSliceNotNil(&resp.Users)
+func AuthUser(ctx *vbeam.Context, req AuthRequest) (resp LoginResponse, err error) {
+	userId := GetUserId(ctx.Tx, req.Email)
+	user := GetUser(ctx.Tx, userId)
+	passHash := GetPassHash(ctx.Tx, userId)
+
+	err = bcrypt.CompareHashAndPassword(passHash, []byte(req.Password))
+
+	if err != nil {
+		resp.Success = false
+		return
+	}
+
+	token, err := generateAuthJwt(ctx, user)
+	if err != nil {
+		resp.Success = false
+		return
+	}
+
+	resp.Success = true
+	resp.Token = token
 	return
 }

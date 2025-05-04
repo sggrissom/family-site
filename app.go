@@ -21,7 +21,7 @@ func MakeApplication() *vbeam.Application {
 	var app = vbeam.NewApplication("FamilySite", dbConnection)
 	vbeam.RegisterProc(app, backend.AddFamily)
 	vbeam.RegisterProc(app, backend.ListFamilies)
-	vbeam.RegisterProc(app, backend.AddUser)
-	vbeam.RegisterProc(app, backend.ListUsers)
+	backend.SetupOauth()
+	backend.RegisterUserMethods(app)
 	return app
 }
