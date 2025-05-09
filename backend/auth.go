@@ -146,3 +146,20 @@ func generateAuthJwt(user User, w http.ResponseWriter) (err error) {
 
 	return
 }
+
+func GetAuthUser(ctx *vbeam.Context) (user User, err error) {
+	token, err := jwt.ParseWithClaims(ctx.Token, &Claims{}, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return jwtKey, nil
+	})
+	if err != nil || !token.Valid {
+		return
+	}
+
+	if claims, ok := token.Claims.(*Claims); ok {
+		user = GetUser(ctx.Tx, GetUserId(ctx.Tx, claims.Username))
+	}
+	return
+}

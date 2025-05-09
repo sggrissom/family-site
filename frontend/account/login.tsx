@@ -14,10 +14,10 @@ const useForm = vlens.declareHook((): Form => ({
 }))
 
 export async function fetch(route: string, prefix: string) {
-    return vlens.rpcOk({})
+    return server.GetAuthContext({})
 }
 
-export function view(route: string, prefix: string, data: server.Empty): preact.ComponentChild {
+export function view(route: string, prefix: string, data: server.AuthResponse): preact.ComponentChild {
     let form = useForm()
     return <>
         <Header />

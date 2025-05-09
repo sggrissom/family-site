@@ -13,6 +13,7 @@ import (
 
 func RegisterUserMethods(app *vbeam.Application) {
 	vbeam.RegisterProc(app, AddUser)
+	vbeam.RegisterProc(app, GetAuthContext)
 }
 
 type AddUserRequest struct {
@@ -32,6 +33,11 @@ type UserListResponse struct {
 
 type LoginResponse struct {
 	Success bool
+}
+
+type AuthResponse struct {
+	user    User
+	isAdmin bool
 }
 
 type User struct {
@@ -142,5 +148,14 @@ func AddUser(ctx *vbeam.Context, req AddUserRequest) (resp UserListResponse, err
 
 	vbolt.TxCommit(ctx.Tx)
 
+	return
+}
+
+func GetAuthContext(ctx *vbeam.Context, req Empty) (resp AuthResponse, err error) {
+	user, authErr := GetAuthUser(ctx)
+	if authErr != nil && user.Id > 0 {
+		resp.user = user
+		resp.isAdmin = user.Id == 1
+	}
 	return
 }
