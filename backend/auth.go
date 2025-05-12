@@ -88,13 +88,13 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = generateAuthJwt(user, w)
+	token, err := generateAuthJwt(user, w)
 	if err != nil {
 		json.NewEncoder(w).Encode(LoginResponse{Success: false})
 		return
 	}
 
-	json.NewEncoder(w).Encode(LoginResponse{Success: true})
+	json.NewEncoder(w).Encode(LoginResponse{Success: true, Token: token})
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +116,7 @@ func generateToken(n int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func generateAuthJwt(user User, w http.ResponseWriter) (err error) {
+func generateAuthJwt(user User, w http.ResponseWriter) (tokenString string, err error) {
 	expirationTime := time.Now().Add(15 * time.Minute)
 	claims := &Claims{
 		Username: user.Email,
@@ -126,7 +126,7 @@ func generateAuthJwt(user User, w http.ResponseWriter) (err error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err = token.SignedString(jwtKey)
 	if err != nil {
 		return
 	}

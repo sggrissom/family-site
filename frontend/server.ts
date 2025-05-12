@@ -22,17 +22,11 @@ export interface UserListResponse {
 }
 
 export interface AuthResponse {
-    user: User
-    isAdmin: boolean
-}
-
-export interface User {
     Id: number
     Email: string
-    Creation: string
-    LastLogin: string
     FirstName: string
     LastName: string
+    isAdmin: boolean
 }
 
 export async function AddFamily(data: AddFamilyRequest): Promise<rpc.Response<FamilyListResponse>> {
