@@ -1,5 +1,7 @@
 import * as preact from "preact"
 import * as rpc from "vlens/rpc";
+import * as server from "@app/server";
+import * as core from "vlens/core";
 
 type Data = {}
 
@@ -8,8 +10,11 @@ export async function fetch(route: string, prefix: string) {
 }
 
 export function view(route: string, prefix: string, data: Data): preact.ComponentChild {
+    core.debugVar(rpc.getAuthHeaders())
+    
     return <>
         <Header /><HeroSection /><Footer />
+        <core.debugVarsPanel />
     </>
 }
 
@@ -24,7 +29,15 @@ const HeroSection = () => {
     );
 };
 
-export const Header = () => {
+type HeaderProps = { auth?: server.AuthResponse }
+export const Header : preact.FunctionalComponent<HeaderProps> = ({auth}) => {
+    if (auth && auth.Id > 0) {
+        return <LoggedInHeader />
+    }
+    return <LoggedOutHeader />
+}
+
+const LoggedOutHeader = () => {
     return (
         <header>
             <div className="logo">Family Site</div>
@@ -32,6 +45,17 @@ export const Header = () => {
                 <a href="/explore">Explore</a>
                 <a href="/login">Log In</a>
                 <a href="/register">Sign Up</a>
+            </nav>
+        </header>
+    );
+};
+
+const LoggedInHeader = () => {
+    return (
+        <header>
+            <div className="logo">Family Site</div>
+            <nav>
+                <a href="/explore">Explore</a>
             </nav>
         </header>
     );

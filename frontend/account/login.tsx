@@ -2,6 +2,8 @@ import * as preact from "preact"
 import { Footer, Header } from "home";
 import * as vlens from "vlens";
 import * as server from "@app/server";
+import * as rpc from "vlens/rpc";
+import * as core from "vlens/core";
 
 type Form = {
     email: string
@@ -18,9 +20,12 @@ export async function fetch(route: string, prefix: string) {
 }
 
 export function view(route: string, prefix: string, data: server.AuthResponse): preact.ComponentChild {
+    if (data.Id > 0) {
+        core.setRoute('/')
+    }
     let form = useForm()
     return <>
-        <Header />
+        <Header auth={data}/>
         <div className={"container"}>
             <LoginForm form={form}/>
         </div>
@@ -52,7 +57,8 @@ async function onLoginClicked(form: Form, event: Event) {
     vlens.scheduleRedraw()
 }
 
-const LoginForm = ({form}: {form: Form}) => {
+type LoginFormProps = { form: Form }
+const LoginForm : preact.FunctionalComponent<LoginFormProps> = ({form}) => {
     return (
         <div>
             <h2>Register</h2>
