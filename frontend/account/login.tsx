@@ -4,6 +4,7 @@ import * as vlens from "vlens";
 import * as server from "@app/server";
 import * as rpc from "vlens/rpc";
 import * as core from "vlens/core";
+import * as auth from "util/authCache";
 
 type Form = {
     email: string
@@ -21,11 +22,12 @@ export async function fetch(route: string, prefix: string) {
 
 export function view(route: string, prefix: string, data: server.AuthResponse): preact.ComponentChild {
     if (data.Id > 0) {
+        auth.setAuth(data)
         core.setRoute('/')
     }
     let form = useForm()
     return <>
-        <Header auth={data}/>
+        <Header/>
         <div className={"container"}>
             <LoginForm form={form}/>
         </div>
@@ -51,7 +53,8 @@ async function onLoginClicked(form: Form, event: Event) {
 
     const result = await res.json()
     if (result.Success) {
-        console.log("success")
+        rpc.setAuthHeaders({'x-auth-token': result.Token})
+        auth.setAuth(result.Auth)
     }
 
     vlens.scheduleRedraw()

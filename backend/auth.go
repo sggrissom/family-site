@@ -94,7 +94,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(LoginResponse{Success: true, Token: token})
+	resp := GetAuthResponseFromUser(user)
+	json.NewEncoder(w).Encode(LoginResponse{Success: true, Token: token, auth: resp})
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {

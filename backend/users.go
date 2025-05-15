@@ -34,6 +34,7 @@ type UserListResponse struct {
 type LoginResponse struct {
 	Success bool
 	Token   string
+	auth    AuthResponse
 }
 
 type AuthResponse struct {
@@ -158,11 +159,16 @@ func AddUser(ctx *vbeam.Context, req AddUserRequest) (resp UserListResponse, err
 func GetAuthContext(ctx *vbeam.Context, req Empty) (resp AuthResponse, err error) {
 	user, authErr := GetAuthUser(ctx)
 	if authErr == nil && user.Id > 0 {
-		resp.Id = user.Id
-		resp.Email = user.Email
-		resp.FirstName = user.FirstName
-		resp.LastName = user.LastName
-		resp.isAdmin = user.Id == 1
+		resp = GetAuthResponseFromUser(user)
 	}
+	return
+}
+
+func GetAuthResponseFromUser(user User) (resp AuthResponse) {
+	resp.Id = user.Id
+	resp.Email = user.Email
+	resp.FirstName = user.FirstName
+	resp.LastName = user.LastName
+	resp.isAdmin = user.Id == 1
 	return
 }

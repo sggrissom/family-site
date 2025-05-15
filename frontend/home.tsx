@@ -2,6 +2,7 @@ import * as preact from "preact"
 import * as rpc from "vlens/rpc";
 import * as server from "@app/server";
 import * as core from "vlens/core";
+import { getAuth } from "./util/authCache";
 
 type Data = {}
 
@@ -29,8 +30,8 @@ const HeroSection = () => {
     );
 };
 
-type HeaderProps = { auth?: server.AuthResponse }
-export const Header : preact.FunctionalComponent<HeaderProps> = ({auth}) => {
+export const Header = () => {
+    const auth = getAuth()
     if (auth && auth.Id > 0) {
         return <LoggedInHeader />
     }
