@@ -55,8 +55,10 @@ async function onLoginClicked(form: Form, event: Event) {
     if (result.Success) {
         rpc.setAuthHeaders({'x-auth-token': result.Token})
         auth.setAuth(result.Auth)
+        core.setRoute('/dashboard')
+    } else {
+        form.error = "login failure"
     }
-
     vlens.scheduleRedraw()
 }
 
