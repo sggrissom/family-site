@@ -17,12 +17,12 @@ const useForm = vlens.declareHook((): Form => ({
 }))
 
 export async function fetch(route: string, prefix: string) {
-    return server.GetAuthContext({})
+    return rpc.ok<server.Empty>({})
 }
 
-export function view(route: string, prefix: string, data: server.AuthResponse): preact.ComponentChild {
-    if (data.Id > 0) {
-        auth.setAuth(data)
+export function view(route: string, prefix: string, data: server.Empty): preact.ComponentChild {
+    const currentAuth = auth.getAuth()
+    if (currentAuth && currentAuth.Id > 0) {
         core.setRoute('/')
     }
     let form = useForm()

@@ -34,7 +34,7 @@ type UserListResponse struct {
 type LoginResponse struct {
 	Success bool
 	Token   string
-	auth    AuthResponse
+	Auth    AuthResponse
 }
 
 type AuthResponse struct {
