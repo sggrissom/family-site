@@ -1,9 +1,10 @@
 import * as preact from "preact"
 import * as rpc from "vlens/rpc";
-import * as server from "@app/server";
 import * as core from "vlens/core";
+import * as css from "vlens/css";
 import * as vlens from "vlens";
-import { clearAuth, getAuth } from "./util/authCache";
+import { AuthCache, clearAuth, getAuth } from "./util/authCache";
+import { Empty } from "./server";
 
 type Data = {}
 
@@ -61,7 +62,7 @@ const LoggedInHeader = () => {
             <nav>
                 <a href="/dashboard">Dashboard</a>
                 <a href="/explore">Explore</a>
-                <a onClick={onLogoutClicked}>Logout</a>
+                <a href="/" onClick={onLogoutClicked}>Logout</a>
             </nav>
         </header>
     );
@@ -87,9 +88,30 @@ async function onLogoutClicked(event: Event) {
 }
 
 export const Footer = () => {
+    const auth = getAuth()
     return (
-        <footer>
-            &copy; 2024 Family Site
-        </footer>
+        <>
+            <footer>
+                &copy; 2024 Family Site
+                { auth && FooterLinks(auth) }
+            </footer>
+            <core.debugVarsPanel />
+        </>
     )
 }
+
+const FooterLinks = (auth: AuthCache) => {
+    return (
+        <div className="footer-links">
+            <a href="/profile">Account {auth.Email}</a>
+
+            {auth.Id === 1 && (
+                <a href="/admin">Admin Dashboard</a>
+            )}
+        </div>
+    );
+};
+
+css.rule("button,.button", {
+    margin: "3px",
+});
