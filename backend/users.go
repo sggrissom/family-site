@@ -42,7 +42,7 @@ type AuthResponse struct {
 	Email     string
 	FirstName string
 	LastName  string
-	isAdmin   bool
+	IsAdmin   bool
 }
 
 type User struct {
@@ -169,6 +169,6 @@ func GetAuthResponseFromUser(user User) (resp AuthResponse) {
 	resp.Email = user.Email
 	resp.FirstName = user.FirstName
 	resp.LastName = user.LastName
-	resp.isAdmin = user.Id == 1
+	resp.IsAdmin = user.Id == 1
 	return
 }

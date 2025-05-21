@@ -105,7 +105,7 @@ const FooterLinks = (auth: AuthCache) => {
         <div className="footer-links">
             <a href="/profile">Account {auth.Email}</a>
 
-            {auth.Id === 1 && (
+            {auth.IsAdmin && (
                 <a href="/admin">Admin Dashboard</a>
             )}
         </div>

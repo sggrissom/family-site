@@ -3,7 +3,7 @@ export interface AuthCache {
     Email: string
     FirstName: string
     LastName: string
-    isAdmin: boolean
+    IsAdmin: boolean
 }
 
 let _auth: AuthCache | null = (() => {
