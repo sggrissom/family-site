@@ -15,11 +15,33 @@ export function view(route: string, prefix: string, data: server.Empty): preact.
         core.setRoute("/")
     }
     return <>
-        <Header/>
+        <AdminHeader/>
         <div className="container family-dashboard">
             <h2>Admin Dashboard</h2>
             <p>admin stuff.</p>
         </div>
-        <Footer />
+        <AdminFooter/>
     </>
 }
+
+const AdminHeader = () => {
+    return (
+        <header>
+            <div className="logo">Family Site</div>
+            <nav>
+                <a href="/">Main Site</a>
+            </nav>
+        </header>
+    );
+};
+
+const AdminFooter = () => {
+    return (
+        <>
+            <footer>
+                &copy; 2024 Family Site
+            </footer>
+            <core.debugVarsPanel />
+        </>
+    )
+};

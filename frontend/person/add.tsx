@@ -17,20 +17,7 @@ export function view(route: string, prefix: string, data: server.Empty): preact.
     return <>
         <Header/>
         <div className="container family-dashboard">
-            <h2>Family Dashboard</h2>
-            <p>Welcome family! Here’s an overview of your family.</p>
-            <h3>Family Members</h3>
-            <div className="actions">
-                <a className="button" href="/person/add">
-                    Add Person
-                </a>
-                <a className="button" href="/milestones/add">
-                    Add Milestone
-                </a>
-                <a className="button" href={`/family/edit/1`}>
-                    Edit Family
-                </a>
-            </div>
+            <h2>Add a Person</h2>
         </div>
         <Footer />
     </>
