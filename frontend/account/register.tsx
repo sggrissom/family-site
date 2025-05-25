@@ -2,6 +2,7 @@ import * as preact from "preact"
 import { Footer, Header } from "home";
 import * as vlens from "vlens";
 import * as server from "@app/server";
+import { FunctionalComponent } from "preact";
 
 type Form = {
     first: string
@@ -20,7 +21,7 @@ export async function fetch(route: string, prefix: string) {
 }
 
 export function view(route: string, prefix: string, data: server.UserListResponse): preact.ComponentChild {
-    let form = useForm()
+    const form = useForm()
     return <>
         <Header />
         <div className={"container"}>
@@ -50,7 +51,11 @@ async function onAddUserClicked(form: Form, event: Event) {
     vlens.scheduleRedraw()
 }
 
-const RegisterForm = ({form}: {form: Form}) => {
+interface RegisterFormProps {
+  form: Form;
+}
+
+const RegisterForm: FunctionalComponent<RegisterFormProps> = ({ form }) => {
     return (
         <div>
             <h2>Register</h2>
