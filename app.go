@@ -23,5 +23,6 @@ func MakeApplication() *vbeam.Application {
 	vbeam.RegisterProc(app, backend.ListFamilies)
 	backend.SetupAuth(app)
 	backend.RegisterUserMethods(app)
+	backend.RegisterPersonMethods(app)
 	return app
 }

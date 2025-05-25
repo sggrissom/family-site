@@ -8,16 +8,16 @@ import { getAuth } from "util/authCache"
 import { FunctionalComponent } from "preact";
 
 type Form = {
-    personType: string
+    personType: number
     birthdate: string
     name: string
-    gender: string
-    id: string
+    gender: number
+    id: number
     error: string
 }
 
 const useForm = vlens.declareHook((): Form => ({
-    personType: "", birthdate: "", name:"", gender: "", id: "", error: ""
+    personType: 0, birthdate: "", name:"", gender: 0, id: 0, error: ""
 }))
 
 export async function fetch(route: string, prefix: string) {
@@ -51,8 +51,8 @@ const AddPersonForm: FunctionalComponent<AddPersonFormProps> = ({ form }) => {
         <label htmlFor="personType">Person Type:</label>
         <select id="personType" name="personType" 
         {...vlens.attrsBindInput(vlens.ref(form, "personType"))}>
-          <option value="parent">Parent</option>
-          <option value="child">Child</option>
+          <option value="1">Parent</option>
+          <option value="2">Child</option>
         </select>
       </div>
 
@@ -80,8 +80,8 @@ const AddPersonForm: FunctionalComponent<AddPersonFormProps> = ({ form }) => {
         <label htmlFor="gender">Gender:</label>
         <select id="gender" name="gender"
           {...vlens.attrsBindInput(vlens.ref(form, "gender"))}>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
+          <option value="1">Male</option>
+          <option value="2">Female</option>
         </select>
       </div>
 
@@ -95,6 +95,12 @@ const AddPersonForm: FunctionalComponent<AddPersonFormProps> = ({ form }) => {
 
 async function onAddPersonClicked(form: Form, event: Event) {
     event.preventDefault()
-    console.log(form)
+    server.AddPerson({
+      Id: form.id,
+      PersonType: form.personType,
+      Gender: form.gender,
+      Birthdate: form.birthdate,
+      Name: form.name,
+    })
     vlens.scheduleRedraw()
 }
