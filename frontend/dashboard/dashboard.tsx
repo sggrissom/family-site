@@ -28,7 +28,7 @@ export function view(route: string, prefix: string, data: server.PersonListRespo
                 <a className="button" href="/milestones/add">
                     Add Milestone
                 </a>
-                <a className="button" href={`/family/edit/1`}>
+                <a className="button" href={`/family/add`}>
                     Edit Family
                 </a>
             </div>

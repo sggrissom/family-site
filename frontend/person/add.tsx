@@ -102,5 +102,6 @@ async function onAddPersonClicked(form: Form, event: Event) {
       Birthdate: form.birthdate,
       Name: form.name,
     })
+    core.setRoute("/")
     vlens.scheduleRedraw()
 }

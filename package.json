@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "preact": "^10.26.5",
+    "preact": "^10.26.8",
     "vlens": "^0.1.6"
   },
   "devDependencies": {
