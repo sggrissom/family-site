@@ -1,16 +1,5 @@
 import * as rpc from "vlens/rpc"
 
-export interface AddFamilyRequest {
-    Name: string
-}
-
-export interface FamilyListResponse {
-    AllFamilyNames: string[]
-}
-
-export interface Empty {
-}
-
 export interface AddUserRequest {
     Email: string
     Password: string
@@ -19,6 +8,9 @@ export interface AddUserRequest {
 }
 
 export interface UserListResponse {
+}
+
+export interface Empty {
 }
 
 export interface AuthResponse {
@@ -41,12 +33,14 @@ export interface PersonListResponse {
     AllPersonNames: string[]
 }
 
-export async function AddFamily(data: AddFamilyRequest): Promise<rpc.Response<FamilyListResponse>> {
-    return await rpc.call<FamilyListResponse>('AddFamily', JSON.stringify(data));
+export interface AddFamilyRequest {
+    Id: number
+    Name: string
+    Description: string
 }
 
-export async function ListFamilies(data: Empty): Promise<rpc.Response<FamilyListResponse>> {
-    return await rpc.call<FamilyListResponse>('ListFamilies', JSON.stringify(data));
+export interface FamilyListResponse {
+    AllFamilyNames: string[]
 }
 
 export async function AddUser(data: AddUserRequest): Promise<rpc.Response<UserListResponse>> {
@@ -63,5 +57,13 @@ export async function AddPerson(data: AddPersonRequest): Promise<rpc.Response<Em
 
 export async function ListPeople(data: Empty): Promise<rpc.Response<PersonListResponse>> {
     return await rpc.call<PersonListResponse>('ListPeople', JSON.stringify(data));
+}
+
+export async function AddFamily(data: AddFamilyRequest): Promise<rpc.Response<FamilyListResponse>> {
+    return await rpc.call<FamilyListResponse>('AddFamily', JSON.stringify(data));
+}
+
+export async function ListFamilies(data: Empty): Promise<rpc.Response<FamilyListResponse>> {
+    return await rpc.call<FamilyListResponse>('ListFamilies', JSON.stringify(data));
 }
 

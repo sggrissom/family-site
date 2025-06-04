@@ -62,8 +62,7 @@ func GetAllPeople(tx *vbolt.Tx) (people []Person) {
 	return people
 }
 
-func AddPersonTx(tx *vbolt.Tx, req AddPersonRequest, birthDate time.Time) Person {
-	var person Person
+func AddPersonTx(tx *vbolt.Tx, req AddPersonRequest, birthDate time.Time) (person Person) {
 	if req.Id > 0 {
 		person.Id = req.Id
 	} else {
@@ -76,7 +75,7 @@ func AddPersonTx(tx *vbolt.Tx, req AddPersonRequest, birthDate time.Time) Person
 	person.Birthday = birthDate
 
 	vbolt.Write(tx, PersonBucket, person.Id, &person)
-	return person
+	return
 }
 
 type AddPersonRequest struct {

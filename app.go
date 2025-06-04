@@ -19,10 +19,9 @@ func MakeApplication() *vbeam.Application {
 	vbeam.RunBackServer(cfg.Backport)
 	dbConnection := OpenDB(cfg.DBPath)
 	var app = vbeam.NewApplication("FamilySite", dbConnection)
-	vbeam.RegisterProc(app, backend.AddFamily)
-	vbeam.RegisterProc(app, backend.ListFamilies)
 	backend.SetupAuth(app)
 	backend.RegisterUserMethods(app)
 	backend.RegisterPersonMethods(app)
+	backend.RegisterFamilyMethods(app)
 	return app
 }

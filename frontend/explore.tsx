@@ -43,7 +43,7 @@ const Families = ({form}: {form: Form}) => {
 }
 
 async function onAddFamilyClicked(form: Form) {
-    let [resp, err] = await server.AddFamily({Name: form.name})
+    let [resp, err] = await server.AddFamily({Id: 0, Name: form.name, Description: ""})
     if (resp) {
         form.name = ""
         form.data = resp
