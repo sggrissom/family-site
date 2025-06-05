@@ -12,6 +12,7 @@ import (
 func RegisterFamilyMethods(app *vbeam.Application) {
 	vbeam.RegisterProc(app, AddFamily)
 	vbeam.RegisterProc(app, ListFamilies)
+	vbeam.RegisterProc(app, GetFamilyInfo)
 }
 
 type Empty struct{}
@@ -62,6 +63,11 @@ type FamilyListResponse struct {
 	AllFamilyNames []string
 }
 
+type FamilyDataResponse struct {
+	Family  Family
+	Members []Person
+}
+
 func AddFamily(ctx *vbeam.Context, req AddFamilyRequest) (resp FamilyListResponse, err error) {
 	vbeam.UseWriteTx(ctx)
 	AddFamilyTx(ctx.Tx, req)
@@ -78,5 +84,16 @@ func ListFamilies(ctx *vbeam.Context, req Empty) (resp FamilyListResponse, err e
 	for _, family := range allFamilies {
 		resp.AllFamilyNames = append(resp.AllFamilyNames, family.Name)
 	}
+	return
+}
+
+func GetFamilyInfo(ctx *vbeam.Context, req Empty) (resp FamilyDataResponse, err error) {
+	allFamilies := GetAllFamilies(ctx.Tx)
+	if len(allFamilies) < 1 {
+		resp.Members = []Person{}
+		return
+	}
+	resp.Family = allFamilies[0]
+	resp.Members = GetAllPeople(ctx.Tx)
 	return
 }
