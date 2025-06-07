@@ -22,6 +22,7 @@ var jwtKey []byte
 var oauthConf *oauth2.Config
 var oauthStateString string
 var ErrLoginFailure = errors.New("LoginFailure")
+var ErrAuthFailure = errors.New("AuthFailure")
 
 type Claims struct {
 	Username string `json:"username"`
@@ -149,6 +150,9 @@ func generateAuthJwt(user User, w http.ResponseWriter) (tokenString string, err 
 }
 
 func GetAuthUser(ctx *vbeam.Context) (user User, err error) {
+	if len(ctx.Token) == 0 {
+		return user, ErrAuthFailure
+	}
 	token, err := jwt.ParseWithClaims(ctx.Token, &Claims{}, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")

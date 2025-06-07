@@ -2,7 +2,7 @@ import * as preact from "preact";
 import { Footer, Header } from "home";
 import * as server from "@app/server";
 import * as core from "vlens/core";
-import { getAuth } from "util/authCache";
+import { getAuth, clearAuth } from "util/authCache";
 import { FunctionalComponent } from "preact";
 
 export async function fetch(route: string, prefix: string) {
@@ -15,15 +15,22 @@ export function view(
   data: server.FamilyDataResponse,
 ): preact.ComponentChild {
   const auth = getAuth();
-  if (!(auth && auth.Id > 0)) {
+  if (!(auth && auth.Id > 0) || data.AuthUserId === 0) {
+    clearAuth();
     core.setRoute("/");
+    return;
   }
+  if (!data.Family || data.Family.Id === 0) {
+    core.setRoute("/family/add");
+    return;
+  }
+
   return (
     <>
       <Header />
       <div className="container family-dashboard">
         <h2>Family Dashboard</h2>
-        <p>Welcome family! Here’s an overview of your family.</p>
+        <p>Welcome {data.Family.Name}! Here’s an overview of your family.</p>
         <h3>Family Members</h3>
         <PersonDashboard members={data.Members} />
         <div className="actions">

@@ -21,6 +21,7 @@ type Family struct {
 	Id          int
 	Name        string
 	Description string
+	CreatorId   int
 }
 
 func PackFamily(self *Family, buf *vpack.Buffer) {
@@ -28,6 +29,7 @@ func PackFamily(self *Family, buf *vpack.Buffer) {
 	vpack.Int(&self.Id, buf)
 	vpack.String(&self.Name, buf)
 	vpack.String(&self.Description, buf)
+	vpack.Int(&self.CreatorId, buf)
 }
 
 var FamilyBucket = vbolt.Bucket(&db.Info, "family", vpack.FInt, PackFamily)
@@ -40,7 +42,7 @@ func GetAllFamilies(tx *vbolt.Tx) (families []Family) {
 	return families
 }
 
-func AddFamilyTx(tx *vbolt.Tx, req AddFamilyRequest) (family Family) {
+func AddFamilyTx(tx *vbolt.Tx, req AddFamilyRequest, creatorId int) (family Family) {
 	if req.Id > 0 {
 		family.Id = req.Id
 	} else {
@@ -48,6 +50,7 @@ func AddFamilyTx(tx *vbolt.Tx, req AddFamilyRequest) (family Family) {
 	}
 	family.Name = req.Name
 	family.Description = req.Description
+	family.CreatorId = creatorId
 
 	vbolt.Write(tx, FamilyBucket, family.Id, &family)
 	return
@@ -64,13 +67,21 @@ type FamilyListResponse struct {
 }
 
 type FamilyDataResponse struct {
-	Family  Family
-	Members []Person
+	AuthUserId int
+	Family     Family
+	Members    []Person
 }
 
 func AddFamily(ctx *vbeam.Context, req AddFamilyRequest) (resp FamilyListResponse, err error) {
+	user, err := GetAuthUser(ctx)
+	if err != nil {
+		return
+	}
+	if user.Id == 0 {
+		return
+	}
 	vbeam.UseWriteTx(ctx)
-	AddFamilyTx(ctx.Tx, req)
+	AddFamilyTx(ctx.Tx, req, user.Id)
 	vbolt.TxCommit(ctx.Tx)
 
 	resp.AllFamilyNames = []string{}
@@ -88,6 +99,14 @@ func ListFamilies(ctx *vbeam.Context, req Empty) (resp FamilyListResponse, err e
 }
 
 func GetFamilyInfo(ctx *vbeam.Context, req Empty) (resp FamilyDataResponse, err error) {
+	user, authErr := GetAuthUser(ctx)
+	if authErr != nil {
+		return
+	}
+	if user.Id == 0 {
+		return
+	}
+	resp.AuthUserId = user.Id
 	allFamilies := GetAllFamilies(ctx.Tx)
 	if len(allFamilies) < 1 {
 		resp.Members = []Person{}
