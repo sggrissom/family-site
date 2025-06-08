@@ -21,7 +21,7 @@ type Family struct {
 	Id          int
 	Name        string
 	Description string
-	CreatorId   int
+	OwningUsers []int
 }
 
 func PackFamily(self *Family, buf *vpack.Buffer) {
@@ -29,10 +29,22 @@ func PackFamily(self *Family, buf *vpack.Buffer) {
 	vpack.Int(&self.Id, buf)
 	vpack.String(&self.Name, buf)
 	vpack.String(&self.Description, buf)
-	vpack.Int(&self.CreatorId, buf)
+	vpack.Slice(&self.OwningUsers, vpack.Int, buf)
 }
 
 var FamilyBucket = vbolt.Bucket(&db.Info, "family", vpack.FInt, PackFamily)
+
+// FamilyIndex term: family id, target: owning user ids
+var FamilyIndex = vbolt.Index(&db.Info, "family_by", vpack.FInt, vpack.FInt)
+
+func updateFamilyIndex(tx *vbolt.Tx, entry Family) {
+	vbolt.SetTargetTermsPlain(
+		tx,
+		FamilyIndex,
+		entry.Id,
+		entry.OwningUsers,
+	)
+}
 
 func GetAllFamilies(tx *vbolt.Tx) (families []Family) {
 	vbolt.IterateAll(tx, FamilyBucket, func(key int, value Family) bool {
@@ -40,6 +52,13 @@ func GetAllFamilies(tx *vbolt.Tx) (families []Family) {
 		return true
 	})
 	return families
+}
+
+func GetFamiliesForUser(tx *vbolt.Tx, userId int) (families []Family) {
+	var familyIds []int
+	vbolt.ReadTermTargets(tx, FamilyIndex, userId, &familyIds, vbolt.Window{})
+	vbolt.ReadSlice(tx, FamilyBucket, familyIds, &families)
+	return
 }
 
 func AddFamilyTx(tx *vbolt.Tx, req AddFamilyRequest, creatorId int) (family Family) {
@@ -50,9 +69,10 @@ func AddFamilyTx(tx *vbolt.Tx, req AddFamilyRequest, creatorId int) (family Fami
 	}
 	family.Name = req.Name
 	family.Description = req.Description
-	family.CreatorId = creatorId
+	family.OwningUsers = []int{creatorId}
 
 	vbolt.Write(tx, FamilyBucket, family.Id, &family)
+	updateFamilyIndex(tx, family)
 	return
 }
 
@@ -107,7 +127,7 @@ func GetFamilyInfo(ctx *vbeam.Context, req Empty) (resp FamilyDataResponse, err 
 		return
 	}
 	resp.AuthUserId = user.Id
-	allFamilies := GetAllFamilies(ctx.Tx)
+	allFamilies := GetFamiliesForUser(ctx.Tx, user.Id)
 	if len(allFamilies) < 1 {
 		resp.Members = []Person{}
 		return

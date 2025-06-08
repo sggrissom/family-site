@@ -68,7 +68,7 @@ export interface Family {
     Id: number
     Name: string
     Description: string
-    CreatorId: number
+    OwningUsers: number[]
 }
 
 export interface Person {
