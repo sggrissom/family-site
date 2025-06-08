@@ -51,7 +51,7 @@ export function view(
 }
 
 interface PersonDashboardProps {
-  members: object[];
+  members: server.Person[];
 }
 
 const PersonDashboard: FunctionalComponent<PersonDashboardProps> = ({
