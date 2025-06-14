@@ -37,10 +37,10 @@ const HeroSection = () => {
     <div className="hero">
       <h1>Welcome to a Family Site</h1>
       <p style={{ marginBottom: "40px" }}>Track some family stuff.</p>
-      <a className="cta-button" href="/register">
+      <a className={callToActionButton} href="/register">
         Get Started
       </a>
-      <a className="cta-button" href="/explore">
+      <a className={callToActionButton} href="/explore">
         Explore
       </a>
     </div>
@@ -58,7 +58,7 @@ export const Header = () => {
 const LoggedOutHeader = () => {
   return (
     <header>
-      <div className="logo">Family Site</div>
+      <div className={headerLogo}>Family Site</div>
       <nav>
         <a href="/explore">Explore</a>
         <a href="/login">Log In</a>
@@ -173,7 +173,7 @@ css.rule(".hero p", {
   "font-size": "1.2em",
   "margin-bottom": "20px",
 });
-css.rule(".cta-button", {
+const callToActionButton = css.cls("cta-button", {
   "background-color": "#6c5ce7",
   color: "#fff",
   border: "none",
@@ -186,32 +186,33 @@ css.rule(".cta-button", {
   "box-shadow": "0 2px 4px rgba(0, 0, 0, 0.2)",
   margin: "5px",
 });
-css.rule(".cta-button:hover", {
+css.rule(callToActionButton + ":hover", {
   "background-color": "#5848c2",
-  "transform": "translateY(-2px)",
+  transform: "translateY(-2px)",
   "box-shadow": "0 4px 6px rgba(0, 0, 0, 0.2)",
 });
 css.rule("footer", {
   "text-align": "center",
-  "padding": "20px",
+  padding: "20px",
   "font-size": "0.9em",
-  "color": "#777",
-  "background": "#fff",
+  color: "#777",
+  background: "#fff",
   "border-top": "1px solid #ccc",
 });
 css.rule("header", {
-  "padding": "10px 20px",
-  "display": "flex",
+  padding: "10px 20px",
+  display: "flex",
   "justify-content": "space-between",
   "align-items": "center",
 });
-css.rule("header .logo", {
+const headerLogo = css.cls("header-logo", {
   "font-size": "1.5em",
   "font-weight": "bold",
-  "color": "#6c5ce7",
+  color: "#6c5ce7",
 });
 css.rule("nav a", {
   "margin-left": "15px",
   "text-decoration": "none",
-  "color": "#333",
+  color: "#333",
 });
+
