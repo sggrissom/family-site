@@ -10,10 +10,10 @@ export const Female: GenderType = 1;
 export const Undisclosed: GenderType = 2;
 
 // Errors
-export const ErrEmailTaken = "EmailTaken";
-export const ErrPasswordInvalid = "PasswordInvalid";
 export const ErrLoginFailure = "LoginFailure";
 export const ErrAuthFailure = "AuthFailure";
+export const ErrEmailTaken = "EmailTaken";
+export const ErrPasswordInvalid = "PasswordInvalid";
 
 export interface AddUserRequest {
     Email: string

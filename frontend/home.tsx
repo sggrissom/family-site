@@ -129,3 +129,89 @@ css.rule("button,.button", {
   margin: "3px",
 });
 
+css.rule("body", {
+  margin: 0,
+  "font-family": "Arial, sans-serif",
+  "background-color": "#f4f4f4",
+  color: "#333",
+});
+css.rule("header", {
+  "background-color": "#fff",
+  "border-bottom": "1px solid #ccc",
+  padding: "10px 20px",
+  display: "flex",
+  "justify-content": "space-between",
+  "align-items": "center",
+});
+css.rule("header .logo", {
+  "font-size": "1.5em",
+  "font-weight": "bold",
+});
+css.rule("nav a", {
+  "margin-left": "15px",
+  "text-decoration": "none",
+  color: "#333",
+  "font-size": "1em",
+});
+css.rule(".container", {
+  padding: "40px 20px",
+  "text-align": "center",
+});
+css.rule(".hero", {
+  color: "#fff",
+  padding: "60px 20px",
+  "text-align": "center",
+  position: "relative",
+  background: "linear-gradient(135deg, #00b894 30%, #b2f2bb 100%)",
+  "min-height": "60vh",
+});
+css.rule(".hero h1", {
+  "font-size": "2.5em",
+  "margin-bottom": "10px",
+});
+css.rule(".hero p", {
+  "font-size": "1.2em",
+  "margin-bottom": "20px",
+});
+css.rule(".cta-button", {
+  "background-color": "#6c5ce7",
+  color: "#fff",
+  border: "none",
+  padding: "15px 30px",
+  "font-size": "1.1em",
+  cursor: "pointer",
+  "text-decoration": "none",
+  "border-radius": "5px",
+  transition: "background-color 0.3s ease",
+  "box-shadow": "0 2px 4px rgba(0, 0, 0, 0.2)",
+  margin: "5px",
+});
+css.rule(".cta-button:hover", {
+  "background-color": "#5848c2",
+  "transform": "translateY(-2px)",
+  "box-shadow": "0 4px 6px rgba(0, 0, 0, 0.2)",
+});
+css.rule("footer", {
+  "text-align": "center",
+  "padding": "20px",
+  "font-size": "0.9em",
+  "color": "#777",
+  "background": "#fff",
+  "border-top": "1px solid #ccc",
+});
+css.rule("header", {
+  "padding": "10px 20px",
+  "display": "flex",
+  "justify-content": "space-between",
+  "align-items": "center",
+});
+css.rule("header .logo", {
+  "font-size": "1.5em",
+  "font-weight": "bold",
+  "color": "#6c5ce7",
+});
+css.rule("nav a", {
+  "margin-left": "15px",
+  "text-decoration": "none",
+  "color": "#333",
+});

@@ -10,6 +10,33 @@ export async function fetch(route: string, prefix: string) {
   return rpc.ok<server.Empty>({});
 }
 
+css.rule("body", {
+  "font-family": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+  "background-color": "#ecf0f1",
+  color: "#333",
+  "line-height": "1.6",
+});
+
+css.rule("header", {
+  "background-color": "#2c3e50",
+  color: "#fff",
+  padding: "1rem 2rem",
+});
+
+css.rule("header h1", {
+  margin: 0,
+});
+
+css.rule("header nav a", {
+  color: "#fff",
+  "margin-left": "1rem",
+  "text-decoration": "none",
+});
+
+css.rule("header nav a:hover", {
+  "text-decoration": "underline",
+});
+
 const container = css.cls("admin_container", {
   display: "flex",
   "min-height": "calc(100vh - 140px)",
@@ -35,12 +62,6 @@ export function view(
   ]);
 }
 
-const header = css.cls("admin_header", {
-  color: "#fff",
-  "background-color": "#ecf0f1",
-  padding: "1rem 2rem",
-});
-
 const headerContainer = css.cls("admin_header_container", {
   display: "flex",
   "justify-content": "space-between",
@@ -54,7 +75,7 @@ const headerTitle = css.cls("admin_header_container", {
 const AdminHeader = () => {
   return preact.h(
     "header",
-    { class: header },
+    {},
     preact.h("div", { class: headerContainer }, [
       preact.h("h1", { class: headerTitle }, "Admin Panel"),
       preact.h("nav", {}, [
