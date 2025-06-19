@@ -24,11 +24,11 @@ export function view(
   }
 
   return (
-    <>
+    <div className={mainBody}>
       <Header />
       <HeroSection />
       <Footer />
-    </>
+    </div>
   );
 }
 
@@ -129,7 +129,7 @@ css.rule("button,.button", {
   margin: "3px",
 });
 
-css.rule("body", {
+const mainBody = css.cls("main-body", {
   margin: 0,
   "font-family": "Arial, sans-serif",
   "background-color": "#f4f4f4",

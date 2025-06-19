@@ -10,8 +10,7 @@ export async function fetch(route: string, prefix: string) {
   return rpc.ok<server.Empty>({});
 }
 
-css.rule("body", {
-  "font-family": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+const adminBody = css.cls("admin-body", {
   "background-color": "#ecf0f1",
   color: "#333",
   "line-height": "1.6",
@@ -51,7 +50,7 @@ export function view(
   if (!(auth && auth.IsAdmin)) {
     core.setRoute("/");
   }
-  return preact.h("div", {}, [
+  return preact.h("div", { class: adminBody }, [
     preact.h(AdminHeader),
     preact.h("div", { class: container }, [
       preact.h(AdminSidebar),
