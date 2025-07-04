@@ -91,6 +91,20 @@ const sidebar = css.cls("admin_sidebar", {
   padding: "1rem",
 });
 
+css.rule("." + sidebar + " ul", {
+  "list-style": "none",
+});
+css.rule("." + sidebar + " li", {
+  "margin-bottom": "1rem",
+});
+css.rule("." + sidebar + " a", {
+  color: "#bdc3c7",
+  "text-decoration": "none",
+});
+css.rule("." + sidebar + " a:hover", {
+  color: "#ecf0f1",
+});
+
 const AdminSidebar = () => {
   return preact.h(
     "aside",
@@ -116,11 +130,16 @@ const AdminSidebar = () => {
   );
 };
 
+const footer = css.cls("admin_header_container", {
+  "background-color": "#bdc3c7",
+  "text-align": "center",
+  padding: "1rem",
+});
+
 const AdminFooter = () => {
-  return (
-    <>
-      <footer>&copy; 2024 Family Site</footer>
-      <core.debugVarsPanel />
-    </>
+  return preact.h(
+    "footer",
+    { class: footer },
+    preact.h("div", {}, ["&copy; 2024 Family Site"]),
   );
 };
